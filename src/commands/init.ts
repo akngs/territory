@@ -44,33 +44,19 @@ export async function initGame(gameId: string, numPlayers: number): Promise<void
 
   // Create game directory
   await mkdir(gameDir, { recursive: true });
-  console.log(`Created game directory: gamedata/${sanitizedGameId}/`);
 
   // Perform initial setup
-  const { grid, startingPositions } = performInitialSetup(numPlayers, DEFAULT_CONFIG);
+  const { initialRound, startingPositions } = performInitialSetup(numPlayers, DEFAULT_CONFIG);
 
   // Initialize game state
   const initialState: GameState = {
     gameId: sanitizedGameId,
     config: DEFAULT_CONFIG,
     numPlayers,
-    initialGrid: grid,
     currentRound: 0,
-    rounds: [],
-    endCondition: null,
+    rounds: [initialRound],
   };
 
   // Write initial state to file
   await writeFile(stateFile, JSON.stringify(initialState, null, 2), 'utf-8');
-  console.log(`Created game state file: gamedata/${sanitizedGameId}/game-state.json`);
-  console.log(`\nGame "${sanitizedGameId}" initialized successfully!`);
-  console.log(`Players: ${numPlayers}`);
-  console.log(`Map: ${DEFAULT_CONFIG.MAP_SIZE}×${DEFAULT_CONFIG.MAP_SIZE}`);
-  console.log(`Resource squares: ${Math.ceil((DEFAULT_CONFIG.MAP_SIZE * DEFAULT_CONFIG.MAP_SIZE * DEFAULT_CONFIG.RESOURCE_SQUARE_PCT) / 100)}`);
-  console.log(`\nStarting positions:`);
-  for (const pos of startingPositions) {
-    console.log(`  Player ${pos.playerNumber} (${pos.playerId}): (${pos.coordinate.x}, ${pos.coordinate.y}) with ${DEFAULT_CONFIG.STARTING_UNITS} units`);
-  }
-  console.log(`\nNext steps:`);
-  console.log(`  1. Start round 1 with public discussion`);
 }

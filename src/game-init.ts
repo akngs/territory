@@ -1,4 +1,4 @@
-import type { Coordinate, GridState, GameConfig } from './types.ts';
+import type { Coordinate, GridState, GameConfig, RoundRecord } from './types.ts';
 import {
   createEmptyGridBuilder,
   placeUnits,
@@ -67,7 +67,7 @@ export function generateStartingPositions(numPlayers: number, mapSize: number): 
 export function performInitialSetup(
   numPlayers: number,
   config: GameConfig
-): { grid: GridState; startingPositions: StartingPosition[] } {
+): { initialRound: RoundRecord; startingPositions: StartingPosition[] } {
   // 1. Generate starting positions on outer edge
   const startingCoords = generateStartingPositions(numPlayers, config.MAP_SIZE);
 
@@ -114,5 +114,13 @@ export function performInitialSetup(
   // 6. Serialize grid to compact format
   const grid = serializeGrid(gridBuilder);
 
-  return { grid, startingPositions };
+  // 7. Create initial round record (round 0)
+  const initialRound: RoundRecord = {
+    roundNumber: 0,
+    declarations: [],
+    commands: {},
+    gridState: grid,
+  };
+
+  return { initialRound, startingPositions };
 }

@@ -2,6 +2,7 @@
 
 import { Command } from 'commander';
 import { initGame } from './commands/init.ts';
+import { showState } from './commands/state.ts';
 
 const program = new Command();
 
@@ -22,6 +23,23 @@ program
         throw new Error('Number of players must be a valid integer');
       }
       await initGame(gameId, numPlayers);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`Error: ${error.message}`);
+      } else {
+        console.error('An unknown error occurred');
+      }
+      process.exit(1);
+    }
+  });
+
+program
+  .command('state')
+  .description('Show game state')
+  .argument('<game_id>', 'Game identifier')
+  .action(async (gameId: string) => {
+    try {
+      await showState(gameId);
     } catch (error) {
       if (error instanceof Error) {
         console.error(`Error: ${error.message}`);

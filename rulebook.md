@@ -6,7 +6,7 @@
 |-----------|-------|-------------|
 | `MIN_PLAYERS` | 3 | Minimum number of players |
 | `MAX_PLAYERS` | 20 | Maximum number of players |
-| `MAP_SIZE` | 15 | Grid dimensions (MAP_SIZE × MAP_SIZE) |
+| `MAP_SIZE` | 10 | Grid dimensions (MAP_SIZE × MAP_SIZE) |
 | `MAX_ROUNDS` | 15 | Maximum rounds before timeout |
 | `STARTING_UNITS` | 5 | Initial units per player |
 | `MAX_PLAN_LENGTH` | 200 | Maximum characters per declaration |

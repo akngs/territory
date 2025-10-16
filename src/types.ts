@@ -23,7 +23,7 @@ export interface GameConfig {
 export const DEFAULT_CONFIG: GameConfig = {
   MIN_PLAYERS: 3,
   MAX_PLAYERS: 20,
-  MAP_SIZE: 15,
+  MAP_SIZE: 10,
   MAX_ROUNDS: 15,
   STARTING_UNITS: 5,
   MAX_PLAN_LENGTH: 200,
@@ -64,7 +64,7 @@ export type GridState = string;
 /**
  * Direction for movement commands
  */
-export type Direction = 'U' | 'D' | 'L' | 'R';
+export type Direction = "U" | "D" | "L" | "R";
 
 /**
  * A movement command
@@ -86,19 +86,14 @@ export interface Declaration {
 
 /**
  * A single round's complete record
+ * Grid state represents the state AFTER the round is resolved
  */
 export interface RoundRecord {
   roundNumber: number;
   declarations: Declaration[];
   commands: { [playerId: string]: Command[] };
-  gridStateBefore: GridState;
-  gridStateAfter: GridState;
+  gridState: GridState;
 }
-
-/**
- * Game end condition
- */
-export type EndCondition = 'domination' | 'annihilation' | 'timeout' | null;
 
 /**
  * Complete game state
@@ -107,8 +102,6 @@ export interface GameState {
   gameId: string;
   config: GameConfig;
   numPlayers: number;
-  initialGrid: GridState;
   currentRound: number;
   rounds: RoundRecord[];
-  endCondition: EndCondition;
 }
