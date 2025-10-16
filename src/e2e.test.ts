@@ -79,8 +79,12 @@ describe('End-to-End Game Flow', () => {
     expect(gameState.rounds).toHaveLength(2);
     expect(gameState.currentRound).toBe(2);
 
-    // Verify production applied
-    const round1Grid = parseGrid(gameState.rounds[0].gridState);
+    // Verify round 0 shows state BEFORE resolution
+    const round0Grid = parseGrid(gameState.rounds[0].gridState);
+    expect(round0Grid[playerAPos!.x][playerAPos!.y].units).toBe(5); // Before commands
+
+    // Verify round 1 shows state AFTER resolution (production applied)
+    const round1Grid = parseGrid(gameState.rounds[1].gridState);
     const sourceSquare = round1Grid[playerAPos!.x][playerAPos!.y];
     expect(sourceSquare.units).toBe(4); // 5 - 2 + 1 production
 
@@ -131,7 +135,9 @@ describe('End-to-End Game Flow', () => {
     expect(gameState.rounds).toHaveLength(1);
     expect(gameState.currentRound).toBe(1);
 
-    // Verify domination: A has 21/(21+2+2) = 84% > 50%
+    // Round 0 shows state BEFORE final resolution
+    // Player A starts with 20 units and wins by domination
+    // Note: Grid shows state BEFORE production is applied
     const resolvedGrid = parseGrid(gameState.rounds[0].gridState);
     let finalAUnits = 0;
 
@@ -141,7 +147,7 @@ describe('End-to-End Game Flow', () => {
       }
     }
 
-    expect(finalAUnits).toBe(21);
+    expect(finalAUnits).toBe(20); // Before production
   });
 
   it('should handle multiple rounds of gameplay', async () => {

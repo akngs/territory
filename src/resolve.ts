@@ -223,7 +223,7 @@ export function resolveRound(gameState: GameState): GameState {
   const config = gameState.config;
   const mapSize = config.MAP_SIZE;
 
-  // Parse current grid
+  // Parse current grid (state BEFORE commands execute)
   let grid = parseGrid(currentRound.gridState);
 
   // Convert commands to movements
@@ -235,8 +235,8 @@ export function resolveRound(gameState: GameState): GameState {
   // Apply production
   grid = applyProduction(grid, mapSize, config);
 
-  // Update current round's grid state with the resolved state
-  currentRound.gridState = serializeGrid(grid);
+  // DON'T update current round's grid - it represents state BEFORE commands
+  // The resolved grid is only used for next round or win condition check
 
   // Calculate player units
   const playerUnits = calculatePlayerUnits(grid, mapSize, gameState.numPlayers);
@@ -255,7 +255,7 @@ export function resolveRound(gameState: GameState): GameState {
     const winnerUnits = playerUnits.get(winner) || 0;
     console.log(`Final units: ${winnerUnits}`);
   } else {
-    // Create next round
+    // Create next round with resolved grid state
     const nextRound: RoundRecord = {
       roundNumber: currentRound.roundNumber + 1,
       declarations: [],
