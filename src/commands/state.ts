@@ -75,6 +75,29 @@ export async function showState(gameId: string): Promise<void> {
     throw err;
   }
 
+  // Determine current phase
+  const currentRound = gameState.rounds[gameState.rounds.length - 1];
+  const expectedDeclarations = gameState.numPlayers * gameState.config.DECLARATION_COUNT;
+  const hasCommands = Object.keys(currentRound.commands).length > 0;
+  const hasNextRound = gameState.rounds.length > currentRound.roundNumber;
+
+  let phase = '';
+  if (hasCommands && hasNextRound) {
+    phase = `Round ${gameState.currentRound} - Awaiting declarations (phase 1/${gameState.config.DECLARATION_COUNT})`;
+  } else if (hasCommands && !hasNextRound) {
+    phase = `Game Over`;
+  } else if (currentRound.declarations.length < expectedDeclarations) {
+    const currentPhase = Math.floor(currentRound.declarations.length / gameState.numPlayers) + 1;
+    phase = `Round ${currentRound.roundNumber} - Awaiting declarations (phase ${currentPhase}/${gameState.config.DECLARATION_COUNT})`;
+  } else {
+    phase = `Round ${currentRound.roundNumber} - Awaiting commands`;
+  }
+
+  // Display summary
+  console.log(`## Summary`);
+  console.log(phase);
+  console.log();
+
   // Display configuration
   console.log(`## Configuration`);
   console.log(`Players: ${gameState.numPlayers}`);
