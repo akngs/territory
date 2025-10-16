@@ -6,3 +6,6 @@ dist/
 
 # Game data directory (created by territory init)
 gamedata/
+
+# Test coverage reports
+coverage/
