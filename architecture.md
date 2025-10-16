@@ -12,44 +12,50 @@ Territory is a simultaneous-action strategy game implemented as a command-line i
 
 The application follows a **modular, command-based architecture** with clear separation of concerns:
 
-- **CLI Layer**: Routes user commands and handles input/output
-- **Game Logic Layer**: Manages game initialization and state transformations
-- **Data Layer**: Handles persistence and serialization
-- **Utility Layer**: Provides reusable grid manipulation and helper functions
+- **CLI Layer** (`cli.ts`): Routes user commands and handles input/output
+- **Commands Layer** (`commands/`): Individual command handlers (init, discuss, cmds, help)
+- **Game Logic Layer** (`resolve.ts`, `game-init.ts`): Manages state transformations and game mechanics
+- **Utility Layer** (`utils.ts`, `grid-utils.ts`): Shared helpers for I/O, validation, and grid operations
+- **Data Layer**: JSON-based persistence with compact grid serialization
 
 ## Core Components
 
-### 1. Command Router
-Entry point that parses user commands and delegates to appropriate handlers. Uses the command pattern for extensibility.
+### 1. Command Router (`cli.ts`)
+Entry point using Commander.js. Routes commands: `init`, `state`, `discuss`, `cmds`, `help-game`.
 
-### 2. Game Initialization
-Responsible for creating new games, generating initial maps, placing players, and establishing starting conditions.
+### 2. Game Initialization (`game-init.ts`)
+Creates new games with randomized starting positions, resource squares, and initial grid state.
 
-### 3. Game State Manager
-Manages the complete game state including grid representation, player information, and round history.
+### 3. Round Resolution (`resolve.ts`)
+Processes simultaneous movements, resolves combat, applies production, and checks win conditions.
 
-### 4. Grid System
-Handles the spatial representation of the game world using a compact serialization format for efficient storage and human-readable persistence.
+### 4. Grid System (`grid-utils.ts`)
+Compact serialization format: `NNp?` (units, player, type). Supports parsing, building, and manipulation.
+
+### 5. Shared Utilities (`utils.ts`)
+Common functions: game loading/saving, stdin reading, coordinate calculations, validation.
 
 ## Data Flow
 
+**Game Execution**:
 ```
-User Input → CLI Router → Command Handler → Game Logic → Data Persistence
-                                ↓
-                          Grid Utilities
+stdin → Command Handler → Load State → Game Logic → Resolve → Save State
+                              ↓            ↓
+                        Validation    Grid Utils
 ```
 
-State retrieval follows the reverse path:
+**Round Resolution**:
 ```
-File System → Game State → Parsing → Formatting → Display
+Commands → Movements → Combat → Production → Win Check → Next Round
 ```
 
 ## Technology Stack
 
-- **Runtime**: Node.js with ES modules
+- **Runtime**: Node.js with `--experimental-strip-types`
 - **Language**: TypeScript with strict type checking
-- **CLI Framework**: Commander.js for argument parsing
-- **Storage**: JSON files on the file system
+- **CLI Framework**: Commander.js
+- **Testing**: Vitest (68 tests: unit, integration, e2e)
+- **Storage**: JSON files in `gamedata/`
 
 ## Design Principles
 
@@ -65,17 +71,19 @@ Games are persisted as JSON files in a dedicated directory structure. Each game 
 
 ## Current State
 
-The application currently supports:
-- Game initialization with configurable player count
-- State viewing and inspection
-- Initial setup with randomized starting positions
-
-Round resolution and turn progression are planned for future implementation.
+**Fully functional game** with complete gameplay loop:
+- Game initialization with 3-20 players
+- Two-phase declaration system
+- Movement command submission with validation
+- Automatic round resolution (movement, combat, production)
+- Win condition checking (domination, annihilation, timeout)
+- Comprehensive help system and error messages
 
 ## Extensibility
 
-The architecture is designed for easy extension:
-- New CLI commands can be added through the command pattern
-- Game logic is modular and can be enhanced independently
-- Type system provides contracts for safe modifications
-- Grid utilities support any grid-based operations
+Clean separation enables easy extensions:
+- **New commands**: Add handlers in `commands/` directory
+- **Game mechanics**: Modify `resolve.ts` for new rules
+- **Utilities**: Shared code in `utils.ts` prevents duplication
+- **Type safety**: TypeScript contracts ensure safe modifications
+- **Testing**: Comprehensive test suite catches regressions
