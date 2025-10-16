@@ -47,7 +47,16 @@ function renderGrid(gridState: string): string {
   for (let i = 0; i < rows.length; i++) {
     const squares = rows[i].split('|');
     const displaySquares = squares.map(sq => {
-      // Format: "NNp?" -> display as "NNp?" (4 chars)
+      // Format: "NNp?" where ? is '+' for resource or '.' for normal
+      const isResource = sq[3] === '+';
+      const isNeutral = sq[2] === '.';
+
+      // Colorize: resource squares in green, neutral squares dimmed
+      if (isResource) {
+        return chalk.green(sq);
+      } else if (isNeutral) {
+        return chalk.dim(sq);
+      }
       return sq;
     });
     lines.push(displaySquares.join(' '));
