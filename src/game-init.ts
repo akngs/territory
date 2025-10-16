@@ -1,4 +1,4 @@
-import type { Coordinate, GridState, Player, GameConfig } from './types.ts';
+import type { Coordinate, GridState, GameConfig } from './types.ts';
 import {
   createEmptyGridBuilder,
   placeUnits,
@@ -6,6 +6,15 @@ import {
   serializeGrid,
   getPlayerIdChar,
 } from './grid-utils.ts';
+
+/**
+ * Starting position with player info for display purposes only
+ */
+export interface StartingPosition {
+  playerId: string;
+  playerNumber: number;
+  coordinate: Coordinate;
+}
 
 /**
  * Check if a coordinate is on the outer edge of the map
@@ -53,46 +62,31 @@ export function generateStartingPositions(numPlayers: number, mapSize: number): 
 }
 
 /**
- * Initialize players with starting positions
- */
-export function initializePlayers(
-  numPlayers: number,
-  startingPositions: Coordinate[]
-): Player[] {
-  const players: Player[] = [];
-
-  for (let i = 0; i < numPlayers; i++) {
-    const playerId = getPlayerIdChar(i);
-    players.push({
-      id: playerId,
-      name: `Player ${i + 1}`,
-      startingSquare: startingPositions[i],
-      isEliminated: false,
-    });
-  }
-
-  return players;
-}
-
-/**
  * Perform complete initial setup for a new game
  */
 export function performInitialSetup(
   numPlayers: number,
   config: GameConfig
-): { grid: GridState; players: Player[] } {
+): { grid: GridState; startingPositions: StartingPosition[] } {
   // 1. Generate starting positions on outer edge
-  const startingPositions = generateStartingPositions(numPlayers, config.MAP_SIZE);
+  const startingCoords = generateStartingPositions(numPlayers, config.MAP_SIZE);
 
-  // 2. Initialize players
-  const players = initializePlayers(numPlayers, startingPositions);
+  // 2. Create starting positions with player IDs for display
+  const startingPositions: StartingPosition[] = [];
+  for (let i = 0; i < numPlayers; i++) {
+    startingPositions.push({
+      playerId: getPlayerIdChar(i),
+      playerNumber: i + 1,
+      coordinate: startingCoords[i],
+    });
+  }
 
   // 3. Create empty grid
   const gridBuilder = createEmptyGridBuilder(config.MAP_SIZE);
 
   // 4. Place starting units
-  for (const player of players) {
-    placeUnits(gridBuilder, player.startingSquare, player.id, config.STARTING_UNITS);
+  for (const pos of startingPositions) {
+    placeUnits(gridBuilder, pos.coordinate, pos.playerId, config.STARTING_UNITS);
   }
 
   // 5. Select resource squares (excluding player starting positions)
@@ -103,7 +97,7 @@ export function performInitialSetup(
   const availableCoords: Coordinate[] = [];
   for (let x = 0; x < config.MAP_SIZE; x++) {
     for (let y = 0; y < config.MAP_SIZE; y++) {
-      const isStarting = startingPositions.some(pos => pos.x === x && pos.y === y);
+      const isStarting = startingCoords.some(pos => pos.x === x && pos.y === y);
       if (!isStarting) {
         availableCoords.push({ x, y });
       }
@@ -120,5 +114,5 @@ export function performInitialSetup(
   // 6. Serialize grid to compact format
   const grid = serializeGrid(gridBuilder);
 
-  return { grid, players };
+  return { grid, startingPositions };
 }

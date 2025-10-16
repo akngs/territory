@@ -79,28 +79,9 @@ export interface Command {
  * Player's declaration (plan)
  */
 export interface Declaration {
-  playerId: string;
+  playerId: string; // Single character: 'a', 'b', 'c', etc.
   text: string;
   declarationNumber: number; // 1 or 2
-}
-
-/**
- * Player information
- */
-export interface Player {
-  id: string; // Single character: 'a', 'b', 'c', etc.
-  name: string;
-  startingSquare: Coordinate;
-  isEliminated: boolean;
-}
-
-/**
- * Player statistics for a round
- */
-export interface PlayerStats {
-  playerId: string;
-  totalUnits: number;
-  controlledSquares: number;
 }
 
 /**
@@ -112,8 +93,6 @@ export interface RoundRecord {
   commands: { [playerId: string]: Command[] };
   gridStateBefore: GridState;
   gridStateAfter: GridState;
-  playerStats: PlayerStats[];
-  events: string[]; // Notable events (combat, eliminations, etc.)
 }
 
 /**
@@ -128,7 +107,6 @@ export interface GameState {
   gameId: string;
   config: GameConfig;
   numPlayers: number;
-  players: Player[];
   initialGrid: GridState;
   currentRound: number;
   rounds: RoundRecord[];

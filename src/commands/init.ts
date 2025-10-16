@@ -47,14 +47,13 @@ export async function initGame(gameId: string, numPlayers: number): Promise<void
   console.log(`Created game directory: gamedata/${sanitizedGameId}/`);
 
   // Perform initial setup
-  const { grid, players } = performInitialSetup(numPlayers, DEFAULT_CONFIG);
+  const { grid, startingPositions } = performInitialSetup(numPlayers, DEFAULT_CONFIG);
 
   // Initialize game state
   const initialState: GameState = {
     gameId: sanitizedGameId,
     config: DEFAULT_CONFIG,
     numPlayers,
-    players,
     initialGrid: grid,
     currentRound: 0,
     rounds: [],
@@ -69,8 +68,8 @@ export async function initGame(gameId: string, numPlayers: number): Promise<void
   console.log(`Map: ${DEFAULT_CONFIG.MAP_SIZE}×${DEFAULT_CONFIG.MAP_SIZE}`);
   console.log(`Resource squares: ${Math.ceil((DEFAULT_CONFIG.MAP_SIZE * DEFAULT_CONFIG.MAP_SIZE * DEFAULT_CONFIG.RESOURCE_SQUARE_PCT) / 100)}`);
   console.log(`\nStarting positions:`);
-  for (const player of players) {
-    console.log(`  ${player.name}: (${player.startingSquare.x}, ${player.startingSquare.y}) with ${DEFAULT_CONFIG.STARTING_UNITS} units`);
+  for (const pos of startingPositions) {
+    console.log(`  Player ${pos.playerNumber} (${pos.playerId}): (${pos.coordinate.x}, ${pos.coordinate.y}) with ${DEFAULT_CONFIG.STARTING_UNITS} units`);
   }
   console.log(`\nNext steps:`);
   console.log(`  1. Start round 1 with public discussion`);
