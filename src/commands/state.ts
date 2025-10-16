@@ -110,7 +110,7 @@ export async function showState(gameId: string): Promise<void> {
       console.log();
       console.log(`Declarations:`);
       for (const decl of round.declarations) {
-        console.log(`  [${decl.playerId}#${decl.declarationNumber}] ${decl.text}`);
+        console.log(`- ${decl.playerId}: ${decl.text}`);
       }
     }
 
