@@ -1,5 +1,6 @@
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import chalk from 'chalk';
 import type { GameState } from '../types.ts';
 
 /**
@@ -76,10 +77,8 @@ export async function showState(gameId: string): Promise<void> {
   }
 
   // Display rounds history
-  console.log(`## Rounds (${gameState.rounds.length})`);
   for (const round of gameState.rounds) {
-    console.log();
-    console.log(`### Round ${round.roundNumber}/${gameState.config.MAX_ROUNDS}`);
+    console.log(chalk.cyan(`## Round ${round.roundNumber}/${gameState.config.MAX_ROUNDS}`));
     console.log();
 
     // Render the grid
@@ -137,6 +136,6 @@ export async function showState(gameId: string): Promise<void> {
 
   // Display summary at the end
   console.log();
-  console.log(`## Summary`);
+  console.log(chalk.cyan(`## Summary`));
   console.log(phase);
 }
