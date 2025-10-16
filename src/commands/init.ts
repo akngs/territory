@@ -47,7 +47,7 @@ export async function initGame(gameId: string, numPlayers: number): Promise<void
   console.log(`Created game directory: gamedata/${sanitizedGameId}/`);
 
   // Perform initial setup
-  const { grid, players } = performInitialSetup(sanitizedGameId, numPlayers, DEFAULT_CONFIG);
+  const { grid, players } = performInitialSetup(numPlayers, DEFAULT_CONFIG);
 
   // Initialize game state
   const initialState: GameState = {

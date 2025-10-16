@@ -45,19 +45,21 @@ export interface Coordinate {
 }
 
 /**
- * A single square on the map
+ * Grid state in compact string format
+ *
+ * Format: Each square is "NNp?" where:
+ * - NN = unit count (2 digits, zero-padded)
+ * - p = player ID (. for neutral, a-z for players)
+ * - ? = square type (+ for resource, . for normal)
+ *
+ * Example: "05a+|00..|03b." represents 3 squares:
+ * - 5 units, player a, resource square
+ * - 0 units, neutral, normal square
+ * - 3 units, player b, normal square
+ *
+ * Rows separated by newlines, squares by |
  */
-export interface Square {
-  coordinate: Coordinate;
-  isResource: boolean;
-  units: { [playerId: string]: number }; // playerId -> unit count
-  controller: string | null; // playerId or null if neutral
-}
-
-/**
- * Grid state
- */
-export type GridState = Square[][];
+export type GridState = string;
 
 /**
  * Direction for movement commands
@@ -86,7 +88,7 @@ export interface Declaration {
  * Player information
  */
 export interface Player {
-  id: string;
+  id: string; // Single character: 'a', 'b', 'c', etc.
   name: string;
   startingSquare: Coordinate;
   isEliminated: boolean;

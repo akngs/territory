@@ -1,4 +1,11 @@
-import type { Coordinate, GridState, Player, Square, GameConfig } from './types.ts';
+import type { Coordinate, GridState, Player, GameConfig } from './types.ts';
+import {
+  createEmptyGridBuilder,
+  placeUnits,
+  markResourceSquare,
+  serializeGrid,
+  getPlayerIdChar,
+} from './grid-utils.ts';
 
 /**
  * Check if a coordinate is on the outer edge of the map
@@ -46,73 +53,16 @@ export function generateStartingPositions(numPlayers: number, mapSize: number): 
 }
 
 /**
- * Initialize an empty grid
- */
-export function createEmptyGrid(mapSize: number): GridState {
-  const grid: GridState = [];
-
-  for (let x = 0; x < mapSize; x++) {
-    grid[x] = [];
-    for (let y = 0; y < mapSize; y++) {
-      const square: Square = {
-        coordinate: { x, y },
-        isResource: false,
-        units: {},
-        controller: null,
-      };
-      grid[x][y] = square;
-    }
-  }
-
-  return grid;
-}
-
-/**
- * Select random resource squares (excluding player starting positions)
- */
-export function selectResourceSquares(
-  grid: GridState,
-  startingPositions: Coordinate[],
-  resourcePct: number,
-  mapSize: number
-): void {
-  const totalSquares = mapSize * mapSize;
-  const numResourceSquares = Math.ceil((totalSquares * resourcePct) / 100);
-
-  // Get all coordinates except starting positions
-  const availableCoords: Coordinate[] = [];
-  for (let x = 0; x < mapSize; x++) {
-    for (let y = 0; y < mapSize; y++) {
-      const isStarting = startingPositions.some(pos => pos.x === x && pos.y === y);
-      if (!isStarting) {
-        availableCoords.push({ x, y });
-      }
-    }
-  }
-
-  // Randomly select resource squares
-  const shuffled = shuffle(availableCoords);
-  const resourceCoords = shuffled.slice(0, numResourceSquares);
-
-  // Mark squares as resource squares
-  for (const coord of resourceCoords) {
-    grid[coord.x][coord.y].isResource = true;
-  }
-}
-
-/**
- * Initialize players with starting positions and units
+ * Initialize players with starting positions
  */
 export function initializePlayers(
-  gameId: string,
   numPlayers: number,
-  startingPositions: Coordinate[],
-  startingUnits: number
+  startingPositions: Coordinate[]
 ): Player[] {
   const players: Player[] = [];
 
   for (let i = 0; i < numPlayers; i++) {
-    const playerId = `${gameId}-p${i + 1}`;
+    const playerId = getPlayerIdChar(i);
     players.push({
       id: playerId,
       name: `Player ${i + 1}`,
@@ -125,42 +75,50 @@ export function initializePlayers(
 }
 
 /**
- * Place starting units on the grid for each player
- */
-export function placeStartingUnits(
-  grid: GridState,
-  players: Player[],
-  startingUnits: number
-): void {
-  for (const player of players) {
-    const { x, y } = player.startingSquare;
-    grid[x][y].units[player.id] = startingUnits;
-    grid[x][y].controller = player.id;
-  }
-}
-
-/**
  * Perform complete initial setup for a new game
  */
 export function performInitialSetup(
-  gameId: string,
   numPlayers: number,
   config: GameConfig
 ): { grid: GridState; players: Player[] } {
   // 1. Generate starting positions on outer edge
   const startingPositions = generateStartingPositions(numPlayers, config.MAP_SIZE);
 
-  // 2. Create empty grid
-  const grid = createEmptyGrid(config.MAP_SIZE);
+  // 2. Initialize players
+  const players = initializePlayers(numPlayers, startingPositions);
 
-  // 3. Initialize players
-  const players = initializePlayers(gameId, numPlayers, startingPositions, config.STARTING_UNITS);
+  // 3. Create empty grid
+  const gridBuilder = createEmptyGridBuilder(config.MAP_SIZE);
 
   // 4. Place starting units
-  placeStartingUnits(grid, players, config.STARTING_UNITS);
+  for (const player of players) {
+    placeUnits(gridBuilder, player.startingSquare, player.id, config.STARTING_UNITS);
+  }
 
-  // 5. Select resource squares
-  selectResourceSquares(grid, startingPositions, config.RESOURCE_SQUARE_PCT, config.MAP_SIZE);
+  // 5. Select resource squares (excluding player starting positions)
+  const totalSquares = config.MAP_SIZE * config.MAP_SIZE;
+  const numResourceSquares = Math.ceil((totalSquares * config.RESOURCE_SQUARE_PCT) / 100);
+
+  // Get all coordinates except starting positions
+  const availableCoords: Coordinate[] = [];
+  for (let x = 0; x < config.MAP_SIZE; x++) {
+    for (let y = 0; y < config.MAP_SIZE; y++) {
+      const isStarting = startingPositions.some(pos => pos.x === x && pos.y === y);
+      if (!isStarting) {
+        availableCoords.push({ x, y });
+      }
+    }
+  }
+
+  // Randomly select and mark resource squares
+  const shuffled = shuffle(availableCoords);
+  const resourceCoords = shuffled.slice(0, numResourceSquares);
+  for (const coord of resourceCoords) {
+    markResourceSquare(gridBuilder, coord);
+  }
+
+  // 6. Serialize grid to compact format
+  const grid = serializeGrid(gridBuilder);
 
   return { grid, players };
 }
