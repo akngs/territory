@@ -51,11 +51,11 @@ function renderGrid(gridState: string): string {
       const isResource = sq[3] === '+';
       const isNeutral = sq[2] === '.';
 
-      // Colorize: resource squares in green, neutral squares dimmed
+      // Colorize: resource squares in green, neutral squares in gray
       if (isResource) {
         return chalk.green(sq);
       } else if (isNeutral) {
-        return chalk.dim(sq);
+        return chalk.gray(sq);
       }
       return sq;
     });
