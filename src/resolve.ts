@@ -3,7 +3,7 @@ import { parseGrid, serializeGrid } from './grid-utils.ts';
 import { commandsToMovements, applyMovementsFromSources } from './game-logic/movement.ts';
 import { resolveCombat } from './game-logic/combat.ts';
 import { applyProduction, calculatePlayerUnits } from './game-logic/production.ts';
-import { checkWinConditions } from './game-logic/win-conditions.ts';
+import { checkEndConditions } from './game-logic/end-conditions.ts';
 
 /**
  * Result of resolving a round
@@ -15,7 +15,7 @@ export interface ResolveResult {
 }
 
 /**
- * Resolve a round: process movements, combat, production, and check win conditions
+ * Resolve a round: process movements, combat, production, and check end conditions
  * Returns updated game state and optional win information
  *
  * Round resolution sequence:
@@ -24,7 +24,7 @@ export interface ResolveResult {
  * 3. Apply movements (deduct from sources)
  * 4. Resolve combat at all squares
  * 5. Apply production to occupied squares
- * 6. Check win conditions
+ * 6. Check end conditions
  * 7. Create next round or return winner
  *
  * @param gameState Current game state
@@ -50,13 +50,13 @@ export function resolveRound(gameState: GameState): ResolveResult {
   grid = applyProduction(grid, config);
 
   // DON'T update current round's grid - it represents state BEFORE commands
-  // The resolved grid is only used for next round or win condition check
+  // The resolved grid is only used for next round or end condition check
 
   // Calculate player units
   const playerUnits = calculatePlayerUnits(grid, gameState.numPlayers);
 
-  // Check win conditions
-  const winner = checkWinConditions(playerUnits, currentRound.roundNumber, config.MAX_ROUNDS);
+  // Check end conditions
+  const winner = checkEndConditions(playerUnits, currentRound.roundNumber, config.MAX_ROUNDS);
 
   if (winner) {
     // Game over - don't create new round, return winner info

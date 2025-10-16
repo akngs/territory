@@ -14,7 +14,6 @@ export interface GameConfig {
   BASE_PRODUCTION: number;
   RESOURCE_PRODUCTION: number;
   PRODUCTION_CAP: number;
-  ROUND_DURATION_HOURS: number;
 }
 
 /**
@@ -33,7 +32,6 @@ export const DEFAULT_CONFIG: GameConfig = {
   BASE_PRODUCTION: 1,
   RESOURCE_PRODUCTION: 2,
   PRODUCTION_CAP: 21,
-  ROUND_DURATION_HOURS: 24,
 };
 
 /**

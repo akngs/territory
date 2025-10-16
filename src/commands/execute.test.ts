@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseCommand, validateCommand, parsePlayerCommands } from './cmds.ts';
+import { parseCommand, validateCommand, parsePlayerCommands } from './execute.ts';
 import type { Command } from '../types.ts';
 import { createEmptyGridBuilder, placeUnits } from '../grid-utils.ts';
 

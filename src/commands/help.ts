@@ -9,7 +9,7 @@ TERRITORY - A Turn-Based Strategy Game
 OVERVIEW:
   Territory is a multiplayer turn-based strategy game where players compete
   to control the most territory and units. Each round consists of two phases:
-  declarations (player intentions) and commands (actual movements).
+  declarations (player intentions) and execution (actual movements).
 
 COMMANDS:
   init <game_id> <num_players>
@@ -18,19 +18,19 @@ COMMANDS:
 
     Example: init my-game 4
 
-  discuss <game_id>
+  declare <game_id>
     Submit player declarations for the current round.
     Each player submits 2 declarations (one line per player).
     Declarations are public and can be used for strategy or diplomacy.
 
     Input format: One line per player (in order: a, b, c, ...)
     Example:
-      echo "Player A moves north\\nPlayer B defends\\nPlayer C attacks" | discuss my-game
+      echo "Player A moves north\\nPlayer B defends\\nPlayer C attacks" | declare my-game
 
-  cmds <game_id>
-    Submit movement commands for all players.
+  execute <game_id>
+    Execute movement commands for all players.
     Each player can submit multiple commands separated by '|'.
-    After all commands are submitted, the round is automatically resolved.
+    After all commands are executed, the round is automatically resolved.
 
     Input format: One line per player
     Command format: x,y,direction,count
@@ -39,21 +39,21 @@ COMMANDS:
       - count: Number of units to move
 
     Example:
-      echo "3,4,R,5|2,3,D,3\\n1,1,U,2\\n" | cmds my-game
+      echo "3,4,R,5|2,3,D,3\\n1,1,U,2\\n" | execute my-game
       (Player A: two commands, Player B: one command, Player C: no commands)
 
 GAME FLOW:
   1. Initialize game with 'init <game_id> <num_players>'
   2. For each round:
-     a. First declaration phase: 'discuss <game_id>' (once)
-     b. Second declaration phase: 'discuss <game_id>' (once more)
-     c. Submit commands: 'cmds <game_id>'
+     a. First declaration phase: 'declare <game_id>' (once)
+     b. Second declaration phase: 'declare <game_id>' (once more)
+     c. Execution phase: 'execute <game_id>'
      d. Round is automatically resolved
   3. Repeat step 2 until a player wins or max rounds reached
 
 GAME MECHANICS:
   Map:
-    - Default 10x10 grid
+    - Default 8x8 grid
     - Some squares are resource squares (produce 2 units/turn instead of 1)
     - Players start at random edge positions with 5 units each
 
@@ -74,7 +74,7 @@ GAME MECHANICS:
     - Resource squares: +2 units/turn
     - Maximum: 21 units per square
 
-WIN CONDITIONS:
+END CONDITIONS:
   1. Domination: Control >50% of all units
   2. Annihilation: Be the last player with units
   3. Timeout: Have the most units after 15 rounds
@@ -84,13 +84,13 @@ EXAMPLES:
   ./src/cli.ts init game1 3
 
   # First declaration phase
-  echo "I will expand east\\nI will defend\\nI will attack" | ./src/cli.ts discuss game1
+  echo "I will expand east\\nI will defend\\nI will attack" | ./src/cli.ts declare game1
 
   # Second declaration phase
-  echo "Moving now\\nHolding position\\nCharge!" | ./src/cli.ts discuss game1
+  echo "Moving now\\nHolding position\\nCharge!" | ./src/cli.ts declare game1
 
-  # Submit commands (assuming players at various positions)
-  echo "4,5,R,3\\n6,2,L,2\\n8,8,U,4" | ./src/cli.ts cmds game1
+  # Execute commands (assuming players at various positions)
+  echo "4,5,R,3\\n6,2,L,2\\n7,7,U,4" | ./src/cli.ts execute game1
 
 For more information, see the project README.
 `);

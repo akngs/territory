@@ -1,4 +1,4 @@
-Territory is a simultaneous-action strategy game where 3 or more players compete to dominate a grid through tactical unit deployment, resource control, and strategic planning.
+Territory is a simultaneous-action strategy game where 3 or more players compete to dominate a grid through tactical unit deployment, resource control, and strategic planning. Cooperation and deception are core game play mechanics.
 
 > [!WARNING]
 > This project is totally written by AI and not reviewed at all.
@@ -6,14 +6,27 @@ Territory is a simultaneous-action strategy game where 3 or more players compete
 ## Quick Start
 
 ```bash
-# Initialize a new game with 5 players
-./src/cli.ts init my-game 5
+# Install dependencies
+npm install
+
+# Initialize a new game with 3-20 players
+node src/cli.ts init my-game 5
 
 # View game state
-cat gamedata/my-game/game-state.json
+node src/cli.ts state my-game
 
-# Get detailed help
-./src/cli.ts help-game
+# Submit declarations (2 phases per round)
+echo "My first plan
+Player 2 plan
+Player 3 plan" | node src/cli.ts declare my-game
+
+# Execute movement commands (format: x,y,direction,count)
+echo "0,5,R,3
+1,4,D,2|2,3,L,1
+5,0,U,4" | node src/cli.ts execute my-game
+
+# View detailed rules
+node src/cli.ts help-game
 ```
 
 ## Example Walkthrough
@@ -26,7 +39,7 @@ This walkthrough demonstrates a complete game flow with 3 players.
 ./src/cli.ts init demo-game 3
 ```
 
-This creates a new game with 3 players (a, b, c) on a 10x10 grid. Each player starts with 5 units at random edge positions.
+This creates a new game with 3 players (a, b, c) on an 8x8 grid. Each player starts with 5 units at random edge positions.
 
 ### Step 2: View Initial State
 
@@ -48,7 +61,7 @@ Each player makes their first declaration (one line per player):
 ```bash
 echo "I will expand toward the center
 I will secure nearby resources
-I will fortify my position" | ./src/cli.ts discuss demo-game
+I will fortify my position" | ./src/cli.ts declare demo-game
 ```
 
 ### Step 4: Second Declaration Phase
@@ -58,10 +71,10 @@ Each player makes their second declaration:
 ```bash
 echo "Moving 3 units east
 Staying defensive for now
-Scouting south" | ./src/cli.ts discuss demo-game
+Scouting south" | ./src/cli.ts declare demo-game
 ```
 
-### Step 5: Submit Movement Commands
+### Step 5: Execute Movement Commands
 
 Now each player submits their actual movement commands. The format is:
 `x,y,direction,count` where:
@@ -78,8 +91,8 @@ Multiple commands are separated by `|`.
 # - Player C is at position (5,0) with 5 units
 
 echo "0,5,R,3
-9,4,L,3
-5,0,D,3" | ./src/cli.ts cmds demo-game
+7,4,L,3
+5,0,D,3" | ./src/cli.ts execute demo-game
 ```
 
 This automatically resolves the round:
@@ -126,8 +139,8 @@ Players can submit multiple commands in a single turn:
 # Player B: Move 4 units left
 # Player C: No movement this turn
 echo "0,5,R,2|0,6,U,3
-9,4,L,4
-" | ./src/cli.ts cmds demo-game
+7,4,L,4
+" | ./src/cli.ts execute demo-game
 ```
 
 ### Example: Combat Scenario

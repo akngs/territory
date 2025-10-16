@@ -28,7 +28,7 @@ function validateDeclarationPhase(
     return {
       valid: false,
       error: `All ${maxDeclarations} declaration phases have been completed for round ${currentRound.roundNumber}`,
-      hint: `Use 'cmds <game_id>' to submit movement commands`,
+      hint: `Use 'execute <game_id>' to submit movement commands`,
     };
   }
 
@@ -36,9 +36,9 @@ function validateDeclarationPhase(
 }
 
 /**
- * Add player discussions to the current round
+ * Add player declarations to the current round
  */
-export async function discussCommand(gameId: string): Promise<void> {
+export async function declareCommand(gameId: string): Promise<void> {
   // Load game state
   const gameState = await loadGameState(gameId);
 

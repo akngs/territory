@@ -1,8 +1,8 @@
 /**
- * Check win conditions and determine if game is over
+ * Check end conditions and determine if game is over
  * Returns winning player ID or null if game continues
  *
- * Win conditions (checked in order):
+ * End conditions (checked in order):
  * 1. Annihilation: Only one player has units remaining
  * 2. Domination: One player has > 50% of all units
  * 3. Timeout: Max rounds reached, player with most units wins
@@ -12,7 +12,7 @@
  * @param maxRounds Maximum rounds before timeout
  * @returns Winning player ID, or null if game continues
  */
-export function checkWinConditions(
+export function checkEndConditions(
   playerUnits: Map<string, number>,
   currentRound: number,
   maxRounds: number

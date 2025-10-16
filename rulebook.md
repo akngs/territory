@@ -1,111 +1,72 @@
-# Rulebook
+# Territory Rulebook
 
-## Game Parameters
+## Game Overview
+Territory is a simultaneous-action strategy game where players compete to control an 8×8 grid by deploying units, capturing squares, and outmaneuvering opponents.
 
-| Parameter | Value | Description |
-|-----------|-------|-------------|
-| `MIN_PLAYERS` | 3 | Minimum number of players |
-| `MAX_PLAYERS` | 20 | Maximum number of players |
-| `MAP_SIZE` | 10 | Grid dimensions (MAP_SIZE × MAP_SIZE) |
-| `MAX_ROUNDS` | 15 | Maximum rounds before timeout |
-| `STARTING_UNITS` | 5 | Initial units per player |
-| `MAX_PLAN_LENGTH` | 200 | Maximum characters per declaration |
-| `DECLARATION_COUNT` | 2 | Number of declaration phases per round |
-| `MAX_COMMANDS_PER_ROUND` | 3 | Maximum commands per player per round |
-| `RESOURCE_SQUARE_PCT` | 5 | Percentage of squares that are resource squares |
-| `BASE_PRODUCTION` | 1 | Units produced per round in normal squares |
-| `RESOURCE_PRODUCTION` | 2 | Units produced per round in resource squares |
-| `PRODUCTION_CAP` | 21 | Units threshold above which no production occurs |
-| `ROUND_DURATION_HOURS` | 24 | Real-time duration of each round |
+## Setup
+- **Players**: 3-20
+- **Map**: 8×8 grid (64 squares total)
+- **Starting units**: Each player begins with 5 units
+- **Starting position**: Each player gets one random square on the outer edge of the map
+- **Resource squares**: 5% of map squares are marked as resource squares (shown with a + symbol)
+- **Game length**: Maximum 15 rounds
 
-## Game Setup
+## How Each Round Works
 
-**Players**: `MIN_PLAYERS`-`MAX_PLAYERS`
-**Map**: `MAP_SIZE`×`MAP_SIZE` grid (`MAP_SIZE`² squares)
-**Duration**: Maximum `MAX_ROUNDS` rounds
-**Round cycle**: `ROUND_DURATION_HOURS` hours
+### Phase 1: Declarations
+**Purpose**: Communicate your strategy (or deceive your opponents!)
 
-## Initial Setup
+Players submit declarations in two rounds:
+1. **First declaration**: Everyone submits a plan (up to 200 characters), then all plans are revealed at once
+2. **Second declaration**: After seeing what others said, everyone submits another plan
 
-1. Each player receives 1 unique, non overwrapping, random starting square on the map's outer edge
-2. Place `STARTING_UNITS` units in starting square
-3. Set randomly selected `RESOURCE_SQUARE_PCT`% of total squares (ceiling) as "resource squares"
+**Note**: Declarations are completely public but have no mechanical effect - use them for diplomacy, coordination, or bluffing.
 
-## Round Sequence
+### Phase 2: Execution
+**Purpose**: Move your units around the map
 
-### 1. Public Discussion
+Each player submits up to 3 movement commands using this format:
+- `X,Y,DIRECTION,UNITS`
+- Example: `2,3,R,5` means "move 5 units from square (2,3) one square to the right"
 
-**1st Declaration**:
+**Directions**:
+- `U` = Up (decrease Y)
+- `D` = Down (increase Y)
+- `L` = Left (decrease X)
+- `R` = Right (increase X)
 
-- Each player submits a plan (`MAX_PLAN_LENGTH` unicode characters max)
-- All declarations revealed simultaneously when everyone submits
-- Over `MAX_PLAN_LENGTH` characters: auto-truncated. No submission: shows "no plan"
+**Important**: You can only move to adjacent squares (no diagonal moves).
 
-**2nd Declaration**:
+### Phase 3: Resolution
+The game processes all commands automatically in this order:
 
-- After seeing 1st declarations, submit new plan (`MAX_PLAN_LENGTH` characters max)
-- All declarations revealed simultaneously when everyone submits
+**Step 1 - Movement**: All players' moves happen at the same time
 
-### 2. Command Submission
+**Step 2 - Combat**: For each square, determine who controls it
+- Count how many units each player has in that square
+- The player with the most units wins
+- **Winner's remaining units** = Their units - Second place units
+- All other players lose all units in that square
+- **If there's a tie for first place**: Everyone loses all units (square becomes neutral)
 
-- Each player submits **maximum `MAX_COMMANDS_PER_ROUND` commands**
-- Format: "X_from,Y_from,DIRECTION,N", e.g. "0,0,D,3" to send 3 units from (0,0) to (0,1)
-- Movement to adjacent squares only (up/down/left/right, no diagonal)
-- More than `MAX_COMMANDS_PER_ROUND` commands: only first `MAX_COMMANDS_PER_ROUND` executed
-- No submission: all units stay
+**Example**: Player A has 10 units, Player B has 4 units, Player C has 2 units in the same square
+- Player A wins with 10 - 4 = 6 units remaining
+- Players B and C lose all units
 
-### 3. Simultaneous Resolution
+**Step 3 - Production**: Each square with at least one unit produces more units
+- Normal squares: +1 unit
+- Resource squares: +2 units
+- **Exception**: Squares with 21+ units don't produce (production cap)
 
-**3-1. Movement**
+**Step 4 - Victory Check**: Check if anyone has won
 
-- All player movements execute simultaneously
+### Phase 4: Results
+The map is revealed showing all players' positions and unit counts.
 
-**3-2. Control**
+## Winning the Game
 
-For each square independently:
+The game ends immediately when any of these conditions is met:
 
-1. Count all units by player
-2. Combat resolution:
-   - 1st place units - 2nd place units (there may be tie but doesn't matter) = 1st place remaining units
-   - All other players: 0 units
-   - If multiple 1st place (tie): all units are eliminated and the square becomes neutral
-
-**3-3. Production**
-
-Increase units in every square with at least one unit:
-- Normal square: +`BASE_PRODUCTION` unit
-- Resource square: +`RESOURCE_PRODUCTION` units
-- Squares with `PRODUCTION_CAP` or more units do not receive production
-
-**3-4. End Condition Check**
-
-- Check all end conditions
-- If any condition met, game ends immediately and show # of units by players. There could be ties.
-
-### 4. Results
-
-- Reveal full map state
-- Reveal each player's controlled squares count and total units
-
-## End Conditions
-
-**Domination**: One player's units > all others combined
-
-**Annihilation**: All players reach 0 units
-
-**Timeout**: Round `MAX_ROUNDS` ends
-
-## Clarifications
-
-**Command Processing**:
-
-- No units at departure square: ignore command
-- Non-adjacent square: ignore command
-- Specified more than available: move only available amount
-- Multiple commands from same square exceed total: execute in order until depleted
-
-**Combat Calculation**:
-
-- All other players have 0 units → 1st keeps all units
-- 2+ players tied for 1st: tie → all get 0 units
-- 0 units in square: automatically neutral, no controller
+1. **Domination**: One player has more total units than all other players combined
+2. **Annihilation**: All players reach 0 units (tie/draw)
+3. **Timeout**: Round 15 ends (player with most units wins)

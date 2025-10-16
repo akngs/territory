@@ -50,8 +50,8 @@ describe('End-to-End Game Flow', () => {
     expect(playerCUnits).toBe(5);
 
     // Declarations
-    await execPromise(`echo "War!\\nDefend!\\nWatch!\\n" | ${CLI_PATH} discuss ${TEST_GAME_ID}`);
-    await execPromise(`echo "Attack!\\nHold!\\nWait!\\n" | ${CLI_PATH} discuss ${TEST_GAME_ID}`);
+    await execPromise(`echo "War!\\nDefend!\\nWatch!\\n" | ${CLI_PATH} declare ${TEST_GAME_ID}`);
+    await execPromise(`echo "Attack!\\nHold!\\nWait!\\n" | ${CLI_PATH} declare ${TEST_GAME_ID}`);
 
     gameState = JSON.parse(await fs.readFile(`${TEST_GAME_PATH}/game-state.json`, 'utf-8'));
     expect(gameState.rounds[0].declarations).toHaveLength(6);
@@ -70,7 +70,7 @@ describe('End-to-End Game Flow', () => {
     // Submit commands
     const direction = playerAPos!.x === 0 ? 'R' : playerAPos!.x === 7 ? 'L' : 'R';
     const cmdInput = `${playerAPos!.x},${playerAPos!.y},${direction},2\\n\\n\\n`;
-    await execPromise(`echo "${cmdInput}" | ${CLI_PATH} cmds ${TEST_GAME_ID}`);
+    await execPromise(`echo "${cmdInput}" | ${CLI_PATH} execute ${TEST_GAME_ID}`);
 
     gameState = JSON.parse(await fs.readFile(`${TEST_GAME_PATH}/game-state.json`, 'utf-8'));
 
@@ -122,7 +122,7 @@ describe('End-to-End Game Flow', () => {
     await fs.writeFile(`${TEST_GAME_PATH}/game-state.json`, JSON.stringify(gameState, null, 2));
 
     // Submit no-op commands
-    await execPromise(`echo "\\n\\n\\n" | ${CLI_PATH} cmds ${TEST_GAME_ID}`);
+    await execPromise(`echo "\\n\\n\\n" | ${CLI_PATH} execute ${TEST_GAME_ID}`);
 
     gameState = JSON.parse(await fs.readFile(`${TEST_GAME_PATH}/game-state.json`, 'utf-8'));
 
@@ -151,10 +151,10 @@ describe('End-to-End Game Flow', () => {
     // Play through 2 rounds (smaller grid means faster domination)
     for (let round = 1; round <= 2; round++) {
       await execPromise(
-        `echo "R${round}-A\\nR${round}-B\\nR${round}-C\\n" | ${CLI_PATH} discuss ${TEST_GAME_ID}`
+        `echo "R${round}-A\\nR${round}-B\\nR${round}-C\\n" | ${CLI_PATH} declare ${TEST_GAME_ID}`
       );
-      await execPromise(`echo "Go!\\nGo!\\nGo!\\n" | ${CLI_PATH} discuss ${TEST_GAME_ID}`);
-      await execPromise(`echo "\\n\\n\\n" | ${CLI_PATH} cmds ${TEST_GAME_ID}`);
+      await execPromise(`echo "Go!\\nGo!\\nGo!\\n" | ${CLI_PATH} declare ${TEST_GAME_ID}`);
+      await execPromise(`echo "\\n\\n\\n" | ${CLI_PATH} execute ${TEST_GAME_ID}`);
     }
 
     const gameState: GameState = JSON.parse(

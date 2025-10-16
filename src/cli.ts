@@ -3,8 +3,8 @@
 import { Command } from 'commander';
 import { initGame } from './commands/init.ts';
 import { showState } from './commands/state.ts';
-import { discussCommand } from './commands/discuss.ts';
-import { cmdsCommand } from './commands/cmds.ts';
+import { declareCommand } from './commands/declare.ts';
+import { executeCommand } from './commands/execute.ts';
 import { helpCommand } from './commands/help.ts';
 
 /**
@@ -56,18 +56,18 @@ program
   .action(wrapCommand(showState));
 
 program
-  .command('discuss')
-  .description('Record player discussions/declarations from stdin')
+  .command('declare')
+  .description('Record player declarations from stdin')
   .argument('<game_id>', 'Game identifier')
-  .action(wrapCommand(discussCommand));
+  .action(wrapCommand(declareCommand));
 
 program
-  .command('cmds')
+  .command('execute')
   .description(
     'Submit player movement commands from stdin (one line per player, commands separated by |)'
   )
   .argument('<game_id>', 'Game identifier')
-  .action(wrapCommand(cmdsCommand));
+  .action(wrapCommand(executeCommand));
 
 program
   .command('help-game')

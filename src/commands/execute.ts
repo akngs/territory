@@ -168,7 +168,7 @@ function validateCommandPhase(
     return {
       valid: false,
       error: `Declaration phase not complete for round ${currentRound.roundNumber}. Expected ${expectedDeclarations} declarations (${numPlayers} players × ${declarationCount} phases), but got ${currentRound.declarations.length}`,
-      hint: `Use 'discuss <game_id>' to submit declarations first`,
+      hint: `Use 'declare <game_id>' to submit declarations first`,
     };
   }
 
@@ -187,7 +187,7 @@ function validateCommandPhase(
 /**
  * Submit commands for the current round
  */
-export async function cmdsCommand(gameId: string): Promise<void> {
+export async function executeCommand(gameId: string): Promise<void> {
   // Load game state
   const gameState = await loadGameState(gameId);
 

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { checkWinConditions } from './win-conditions.ts';
+import { checkEndConditions } from './end-conditions.ts';
 
-describe('Win Conditions', () => {
+describe('End Conditions', () => {
   describe('Annihilation', () => {
     it('should detect annihilation win when only one player has units', () => {
       const playerUnits = new Map([
@@ -10,7 +10,7 @@ describe('Win Conditions', () => {
         ['c', 0],
       ]);
 
-      const winner = checkWinConditions(playerUnits, 5, 15);
+      const winner = checkEndConditions(playerUnits, 5, 15);
       expect(winner).toBe('a');
     });
 
@@ -22,7 +22,7 @@ describe('Win Conditions', () => {
       ]);
       // Total: 20, each has 10/20 = 50%, no domination (need >50%)
 
-      const winner = checkWinConditions(playerUnits, 5, 15);
+      const winner = checkEndConditions(playerUnits, 5, 15);
       expect(winner).toBeNull(); // Game continues
     });
   });
@@ -36,7 +36,7 @@ describe('Win Conditions', () => {
       ]);
       // Total: 20, a has 11/20 = 55%
 
-      const winner = checkWinConditions(playerUnits, 5, 15);
+      const winner = checkEndConditions(playerUnits, 5, 15);
       expect(winner).toBe('a');
     });
 
@@ -48,7 +48,7 @@ describe('Win Conditions', () => {
       ]);
       // Total: 20, a has 10/20 = 50% (not >50%)
 
-      const winner = checkWinConditions(playerUnits, 5, 15);
+      const winner = checkEndConditions(playerUnits, 5, 15);
       expect(winner).toBeNull();
     });
 
@@ -60,7 +60,7 @@ describe('Win Conditions', () => {
       ]);
       // Total: 20, a has 9/20 = 45%
 
-      const winner = checkWinConditions(playerUnits, 5, 15);
+      const winner = checkEndConditions(playerUnits, 5, 15);
       expect(winner).toBeNull();
     });
   });
@@ -73,7 +73,7 @@ describe('Win Conditions', () => {
         ['c', 5],
       ]);
 
-      const winner = checkWinConditions(playerUnits, 15, 15);
+      const winner = checkEndConditions(playerUnits, 15, 15);
       expect(winner).toBe('a'); // Player with most units
     });
 
@@ -84,7 +84,7 @@ describe('Win Conditions', () => {
         ['c', 5],
       ]);
 
-      const winner = checkWinConditions(playerUnits, 14, 15);
+      const winner = checkEndConditions(playerUnits, 14, 15);
       expect(winner).toBeNull();
     });
 
@@ -96,7 +96,7 @@ describe('Win Conditions', () => {
       ]);
 
       // First player in sorted order wins
-      const winner = checkWinConditions(playerUnits, 15, 15);
+      const winner = checkEndConditions(playerUnits, 15, 15);
       expect(winner).toBeTruthy();
       expect(['a', 'b']).toContain(winner); // One of the tied players
     });
@@ -110,14 +110,14 @@ describe('Win Conditions', () => {
         ['c', 0],
       ]);
 
-      const winner = checkWinConditions(playerUnits, 5, 15);
+      const winner = checkEndConditions(playerUnits, 5, 15);
       expect(winner).toBeNull(); // No winner
     });
 
     it('should handle single player game', () => {
       const playerUnits = new Map([['a', 10]]);
 
-      const winner = checkWinConditions(playerUnits, 1, 15);
+      const winner = checkEndConditions(playerUnits, 1, 15);
       expect(winner).toBe('a'); // Wins by annihilation
     });
 
@@ -128,7 +128,7 @@ describe('Win Conditions', () => {
       ]);
 
       // At max rounds but one player eliminated
-      const winner = checkWinConditions(playerUnits, 15, 15);
+      const winner = checkEndConditions(playerUnits, 15, 15);
       expect(winner).toBe('a'); // Wins by annihilation, not timeout
     });
 
@@ -139,7 +139,7 @@ describe('Win Conditions', () => {
       ]);
 
       // At max rounds and one player dominates
-      const winner = checkWinConditions(playerUnits, 15, 15);
+      const winner = checkEndConditions(playerUnits, 15, 15);
       expect(winner).toBe('a'); // Wins by domination (75%)
     });
   });
