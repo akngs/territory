@@ -114,9 +114,9 @@ export function performInitialSetup(
   // 6. Serialize grid to compact format
   const grid = serializeGrid(gridBuilder);
 
-  // 7. Create initial round record (round 0)
+  // 7. Create initial round record (round 1)
   const initialRound: RoundRecord = {
-    roundNumber: 0,
+    roundNumber: 1,
     declarations: [],
     commands: {},
     gridState: grid,

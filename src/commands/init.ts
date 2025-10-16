@@ -53,7 +53,7 @@ export async function initGame(gameId: string, numPlayers: number): Promise<void
     gameId: sanitizedGameId,
     config: DEFAULT_CONFIG,
     numPlayers,
-    currentRound: 0,
+    currentRound: 1,
     rounds: [initialRound],
   };
 

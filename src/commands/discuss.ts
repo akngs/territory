@@ -1,50 +1,27 @@
-import { promises as fs } from 'fs';
-import { createInterface } from 'readline';
-import type { GameState, Declaration } from '../types.ts';
+import type { Declaration } from '../types.ts';
 import { getPlayerIdChar } from '../grid-utils.ts';
-
-/**
- * Read n lines from stdin
- */
-async function readLines(count: number): Promise<string[]> {
-  const lines: string[] = [];
-  const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-    terminal: false,
-  });
-
-  for await (const line of rl) {
-    lines.push(line);
-    if (lines.length >= count) {
-      rl.close();
-      break;
-    }
-  }
-
-  return lines;
-}
+import { readLines, loadGameState, saveGameState } from '../utils.ts';
 
 /**
  * Add player discussions to the current round
  */
 export async function discussCommand(gameId: string): Promise<void> {
-  const gamePath = `gamedata/${gameId}/game-state.json`;
-
   // Load game state
-  let gameState: GameState;
-  try {
-    const data = await fs.readFile(gamePath, 'utf-8');
-    gameState = JSON.parse(data);
-  } catch (error) {
-    console.error(`Error: Game "${gameId}" not found`);
-    process.exit(1);
-  }
+  const gameState = await loadGameState(gameId);
 
   // Get current round
   const currentRound = gameState.rounds[gameState.rounds.length - 1];
   const numPlayers = gameState.numPlayers;
   const maxDeclarations = gameState.config.DECLARATION_COUNT;
+
+  // Check if commands have already been submitted (can't go back to declarations)
+  if (Object.keys(currentRound.commands).length > 0) {
+    console.error(
+      `Error: Commands have already been submitted for round ${currentRound.roundNumber}`
+    );
+    console.error(`Hint: Declarations must be completed before submitting commands`);
+    process.exit(1);
+  }
 
   // Check how many declaration phases have occurred
   const currentDeclarationCount = currentRound.declarations.length;
@@ -54,6 +31,7 @@ export async function discussCommand(gameId: string): Promise<void> {
     console.error(
       `Error: All ${maxDeclarations} declaration phases have been completed for round ${currentRound.roundNumber}`
     );
+    console.error(`Hint: Use 'cmds <game_id>' to submit movement commands`);
     process.exit(1);
   }
 
@@ -71,19 +49,33 @@ export async function discussCommand(gameId: string): Promise<void> {
   // Create declarations (truncate to max length if needed)
   const maxLength = gameState.config.MAX_PLAN_LENGTH;
   const newDeclarations: Declaration[] = [];
+  const emptyDeclarations: string[] = [];
+
   for (let i = 0; i < numPlayers; i++) {
+    const playerId = getPlayerIdChar(i);
+    const text = lines[i].slice(0, maxLength);
+
+    if (text.trim() === '') {
+      emptyDeclarations.push(`Player ${playerId} (player ${i + 1})`);
+    }
+
     newDeclarations.push({
-      playerId: getPlayerIdChar(i),
-      text: lines[i].slice(0, maxLength),
+      playerId,
+      text,
       declarationNumber,
     });
+  }
+
+  // Warn about empty declarations
+  if (emptyDeclarations.length > 0) {
+    console.warn(`Warning: Empty declarations from: ${emptyDeclarations.join(', ')}`);
   }
 
   // Add declarations to current round
   currentRound.declarations.push(...newDeclarations);
 
   // Save updated game state
-  await fs.writeFile(gamePath, JSON.stringify(gameState, null, 2));
+  await saveGameState(gameId, gameState);
 
   console.log(
     `Declaration phase ${declarationNumber} recorded for round ${currentRound.roundNumber}`

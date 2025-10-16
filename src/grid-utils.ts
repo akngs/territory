@@ -81,3 +81,45 @@ export function serializeGrid(grid: GridSquare[][]): GridState {
 
   return rows.join('\n');
 }
+
+/**
+ * Parse a compact grid string into a 2D array
+ */
+export function parseGrid(gridState: GridState): GridSquare[][] {
+  const rows = gridState.split('\n');
+  const mapSize = rows.length;
+  const grid: GridSquare[][] = [];
+
+  for (let x = 0; x < mapSize; x++) {
+    grid[x] = [];
+  }
+
+  for (let y = 0; y < mapSize; y++) {
+    const squares = rows[y].split('|');
+    for (let x = 0; x < mapSize; x++) {
+      const square = squares[x];
+      // Format: "NNp?" where NN=units (2 digits), p=player, ?=type (+/.)
+      const units = parseInt(square.slice(0, 2), 10);
+      const playerId = square[2];
+      const isResource = square[3] === '+';
+
+      grid[x][y] = {
+        units,
+        playerId,
+        isResource,
+      };
+    }
+  }
+
+  return grid;
+}
+
+/**
+ * Get square at coordinate from grid
+ */
+export function getSquare(grid: GridSquare[][], coord: Coordinate): GridSquare | null {
+  if (coord.x < 0 || coord.x >= grid.length || coord.y < 0 || coord.y >= grid.length) {
+    return null;
+  }
+  return grid[coord.x][coord.y];
+}

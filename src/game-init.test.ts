@@ -52,9 +52,9 @@ describe('generateStartingPositions', () => {
 });
 
 describe('performInitialSetup', () => {
-  it('should create initial round with round number 0', () => {
+  it('should create initial round with round number 1', () => {
     const { initialRound } = performInitialSetup(3, DEFAULT_CONFIG);
-    expect(initialRound.roundNumber).toBe(0);
+    expect(initialRound.roundNumber).toBe(1);
   });
 
   it('should create correct number of starting positions', () => {

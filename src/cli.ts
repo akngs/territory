@@ -4,6 +4,8 @@ import { Command } from 'commander';
 import { initGame } from './commands/init.ts';
 import { showState } from './commands/state.ts';
 import { discussCommand } from './commands/discuss.ts';
+import { cmdsCommand } from './commands/cmds.ts';
+import { helpCommand } from './commands/help.ts';
 
 const program = new Command();
 
@@ -66,6 +68,30 @@ program
       }
       process.exit(1);
     }
+  });
+
+program
+  .command('cmds')
+  .description('Submit player movement commands from stdin (one line per player, commands separated by |)')
+  .argument('<game_id>', 'Game identifier')
+  .action(async (gameId: string) => {
+    try {
+      await cmdsCommand(gameId);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`Error: ${error.message}`);
+      } else {
+        console.error('An unknown error occurred');
+      }
+      process.exit(1);
+    }
+  });
+
+program
+  .command('help-game')
+  .description('Show detailed game rules and mechanics')
+  .action(() => {
+    helpCommand();
   });
 
 program.parse();
