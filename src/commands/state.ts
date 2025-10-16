@@ -160,4 +160,5 @@ export async function showState(gameId: string): Promise<void> {
   console.log();
   console.log(chalk.cyan(`## Summary`));
   console.log(phase);
+  console.log();
 }
