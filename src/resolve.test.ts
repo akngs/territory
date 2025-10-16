@@ -97,8 +97,11 @@ describe('resolveRound', () => {
   it('should resolve combat with clear winner', () => {
     const grid = createEmptyGridBuilder(5);
     placeUnits(grid, { x: 0, y: 0 }, 'a', 10); // Player a: 10 units
-    placeUnits(grid, { x: 2, y: 0 }, 'b', 4);  // Player b: 4 units
-    placeUnits(grid, { x: 4, y: 4 }, 'c', 8); // Player c: 8 units to balance
+    placeUnits(grid, { x: 2, y: 0 }, 'b', 5);  // Player b: 5 units
+    placeUnits(grid, { x: 4, y: 4 }, 'c', 5); // Player c: 5 units for balance
+
+    // After combat at (1,0): a wins with 10-5=5 units, +1 production = 6
+    // After production: a=6, c=6 total=12, no one has >6 (50%)
 
     const gameState: GameState = {
       gameId: 'test-game',
@@ -135,9 +138,9 @@ describe('resolveRound', () => {
     const resolvedGrid = parseGrid(result.rounds[1].gridState);
 
     // Players a and b meet at (1,0)
-    // Player a: 10 units, Player b: 4 units
-    // Winner: a with 10 - 4 = 6 units, then +1 production = 7
-    expect(resolvedGrid[1][0].units).toBe(7);
+    // Player a: 10 units, Player b: 5 units
+    // Winner: a with 10 - 5 = 5 units, then +1 production = 6
+    expect(resolvedGrid[1][0].units).toBe(6);
     expect(resolvedGrid[1][0].playerId).toBe('a');
   });
 
@@ -359,7 +362,10 @@ describe('resolveRound', () => {
     placeUnits(grid, { x: 0, y: 1 }, 'a', 10);
     placeUnits(grid, { x: 2, y: 1 }, 'b', 7);
     placeUnits(grid, { x: 1, y: 0 }, 'c', 5);
-    placeUnits(grid, { x: 4, y: 4 }, 'd', 10); // Add player d to balance
+    placeUnits(grid, { x: 4, y: 4 }, 'd', 3); // Player d for balance
+
+    // After combat at (1,1): a=10, b=7, c=5 → a wins with 10-7=3, +1 prod = 4
+    // After production: a=4, d=4 total=8, each has exactly 50% (tie, no winner)
 
     const gameState: GameState = {
       gameId: 'test-game',
