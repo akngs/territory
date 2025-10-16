@@ -75,16 +75,11 @@ export async function showState(gameId: string): Promise<void> {
     throw err;
   }
 
-  // Display configuration
-  console.log(`## Configuration`);
-  console.log(`Max Rounds: ${gameState.config.MAX_ROUNDS}`);
-  console.log();
-
   // Display rounds history
   console.log(`## Rounds (${gameState.rounds.length})`);
   for (const round of gameState.rounds) {
     console.log();
-    console.log(`### Round ${round.roundNumber}`);
+    console.log(`### Round ${round.roundNumber}/${gameState.config.MAX_ROUNDS}`);
     console.log();
 
     // Render the grid
