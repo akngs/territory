@@ -100,10 +100,8 @@ export async function showState(gameId: string): Promise<void> {
 
     // Show player units
     const playerIds = Array.from(summary.playerUnits.keys()).sort();
-    for (const playerId of playerIds) {
-      const units = summary.playerUnits.get(playerId) || 0;
-      console.log(`Player ${playerId}: ${units} units`);
-    }
+    const unitsList = playerIds.map(id => `${id}=${summary.playerUnits.get(id) || 0}`).join(', ');
+    console.log(`Units: ${unitsList}`);
 
     // Show declarations if any
     if (round.declarations.length > 0) {
