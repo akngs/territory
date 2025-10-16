@@ -14,7 +14,7 @@ export async function discussCommand(gameId: string): Promise<void> {
   const maxDeclarations = gameState.config.DECLARATION_COUNT;
 
   // Check if commands have already been submitted (can't go back to declarations)
-  if (Object.keys(currentRound.commands).length > 0) {
+  if (currentRound.commands.length > 0) {
     console.error(
       `Error: Commands have already been submitted for round ${currentRound.roundNumber}`
     );

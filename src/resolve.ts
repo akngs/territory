@@ -1,5 +1,5 @@
 import type { GameState, RoundRecord, Command, Coordinate } from './types.ts';
-import { parseGrid, serializeGrid, getPlayerIdChar } from './grid-utils.ts';
+import { parseGrid, serializeGrid, getPlayerIdChar, type GridSquare } from './grid-utils.ts';
 import { getTargetCoord } from './utils.ts';
 
 /**
@@ -48,10 +48,10 @@ function commandsToMovements(commands: Command[][]): Movement[] {
  * Process all movements simultaneously and resolve combat
  */
 function processMovements(
-  grid: any[][],
+  grid: GridSquare[][],
   movements: Movement[],
   mapSize: number
-): any[][] {
+): GridSquare[][] {
   // Create combat grid with forces map for each square
   const combatGrid: CombatSquare[][] = grid.map((col, x) =>
     col.map((square, y) => {
@@ -86,7 +86,7 @@ function processMovements(
   }
 
   // Resolve combat and convert back to regular grid
-  const newGrid: any[][] = [];
+  const newGrid: GridSquare[][] = [];
   for (let x = 0; x < mapSize; x++) {
     newGrid[x] = [];
     for (let y = 0; y < mapSize; y++) {
@@ -124,7 +124,7 @@ function processMovements(
 /**
  * Apply production to all occupied squares
  */
-function applyProduction(grid: any[][], mapSize: number, config: any): any[][] {
+function applyProduction(grid: GridSquare[][], mapSize: number, config: GameState['config']): GridSquare[][] {
   const productionCap = config.PRODUCTION_CAP;
   const baseProduction = config.BASE_PRODUCTION;
   const resourceProduction = config.RESOURCE_PRODUCTION;
@@ -148,7 +148,7 @@ function applyProduction(grid: any[][], mapSize: number, config: any): any[][] {
  * Calculate total units for each player
  */
 function calculatePlayerUnits(
-  grid: any[][],
+  grid: GridSquare[][],
   mapSize: number,
   numPlayers: number
 ): Map<string, number> {

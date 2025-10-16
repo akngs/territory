@@ -6,10 +6,10 @@ import { createEmptyGridBuilder, placeUnits, markResourceSquare, serializeGrid, 
 
 describe('resolveRound', () => {
   it('should process simple movement', () => {
-    // Create a 5x5 grid with player a at (0,0) with 5 units and player b with equal units
+    // Create a 5x5 grid with balanced units to avoid domination
     const grid = createEmptyGridBuilder(5);
-    placeUnits(grid, { x: 0, y: 0 }, 'a', 5);
-    placeUnits(grid, { x: 4, y: 4 }, 'b', 5);
+    placeUnits(grid, { x: 0, y: 0 }, 'a', 7);
+    placeUnits(grid, { x: 4, y: 4 }, 'b', 8);
 
     const gameState: GameState = {
       gameId: 'test-game',
@@ -39,13 +39,13 @@ describe('resolveRound', () => {
 
     // Round 0 should show state BEFORE resolution
     const beforeGrid = parseGrid(result.rounds[0].gridState);
-    expect(beforeGrid[0][0].units).toBe(5);
+    expect(beforeGrid[0][0].units).toBe(7);
 
     // Round 1 should show state AFTER resolution
     const resolvedGrid = parseGrid(result.rounds[1].gridState);
 
-    // Source square should have 3 units (5 - 3 = 2, then +1 production)
-    expect(resolvedGrid[0][0].units).toBe(3);
+    // Source square should have 5 units (7 - 3 = 4, then +1 production)
+    expect(resolvedGrid[0][0].units).toBe(5);
     expect(resolvedGrid[0][0].playerId).toBe('a');
 
     // Target square (0,0) -> R = (1,0) should have 4 units (3 moved + 1 production)
@@ -97,12 +97,13 @@ describe('resolveRound', () => {
   it('should resolve combat with clear winner', () => {
     const grid = createEmptyGridBuilder(5);
     placeUnits(grid, { x: 0, y: 0 }, 'a', 10); // Player a: 10 units
-    placeUnits(grid, { x: 2, y: 0 }, 'b', 5);  // Player b: 5 units
+    placeUnits(grid, { x: 2, y: 0 }, 'b', 4);  // Player b: 4 units
+    placeUnits(grid, { x: 4, y: 4 }, 'c', 8); // Player c: 8 units to balance
 
     const gameState: GameState = {
       gameId: 'test-game',
       config: { ...DEFAULT_CONFIG, MAP_SIZE: 5, MAX_ROUNDS: 100 },
-      numPlayers: 2,
+      numPlayers: 3,
       currentRound: 1,
       rounds: [
         {
@@ -123,6 +124,7 @@ describe('resolveRound', () => {
                 unitCount: 5,
               },
             ],
+            [], // Player c has no commands
           ],
           gridState: serializeGrid(grid),
         },
@@ -132,10 +134,10 @@ describe('resolveRound', () => {
     const result = resolveRound(gameState);
     const resolvedGrid = parseGrid(result.rounds[1].gridState);
 
-    // Both should meet at (1,0)
-    // Player a: 10 units, Player b: 5 units
-    // Winner: a with 10 - 5 = 5 units, then +1 production = 6
-    expect(resolvedGrid[1][0].units).toBe(6);
+    // Players a and b meet at (1,0)
+    // Player a: 10 units, Player b: 4 units
+    // Winner: a with 10 - 4 = 6 units, then +1 production = 7
+    expect(resolvedGrid[1][0].units).toBe(7);
     expect(resolvedGrid[1][0].playerId).toBe('a');
   });
 
@@ -214,8 +216,8 @@ describe('resolveRound', () => {
 
   it('should apply resource production bonus', () => {
     const grid = createEmptyGridBuilder(5);
-    placeUnits(grid, { x: 0, y: 0 }, 'a', 5);
-    placeUnits(grid, { x: 4, y: 4 }, 'b', 5);
+    placeUnits(grid, { x: 0, y: 0 }, 'a', 7);
+    placeUnits(grid, { x: 4, y: 4 }, 'b', 8);
     markResourceSquare(grid, { x: 0, y: 0 });
 
     const gameState: GameState = {
@@ -240,7 +242,7 @@ describe('resolveRound', () => {
     const resolvedGrid = parseGrid(result.rounds[1].gridState);
 
     // Should gain 2 units from resource production (RESOURCE_PRODUCTION = 2)
-    expect(resolvedGrid[0][0].units).toBe(7);
+    expect(resolvedGrid[0][0].units).toBe(9);
   });
 
   it('should respect production cap', () => {
@@ -311,7 +313,7 @@ describe('resolveRound', () => {
   it('should handle multiple movements to same square', () => {
     const grid = createEmptyGridBuilder(5);
     placeUnits(grid, { x: 0, y: 0 }, 'a', 10);
-    placeUnits(grid, { x: 4, y: 4 }, 'b', 10);
+    placeUnits(grid, { x: 4, y: 4 }, 'b', 11);
 
     const gameState: GameState = {
       gameId: 'test-game',
@@ -357,11 +359,12 @@ describe('resolveRound', () => {
     placeUnits(grid, { x: 0, y: 1 }, 'a', 10);
     placeUnits(grid, { x: 2, y: 1 }, 'b', 7);
     placeUnits(grid, { x: 1, y: 0 }, 'c', 5);
+    placeUnits(grid, { x: 4, y: 4 }, 'd', 10); // Add player d to balance
 
     const gameState: GameState = {
       gameId: 'test-game',
       config: { ...DEFAULT_CONFIG, MAP_SIZE: 5, MAX_ROUNDS: 100 },
-      numPlayers: 3,
+      numPlayers: 4,
       currentRound: 1,
       rounds: [
         {
@@ -389,6 +392,7 @@ describe('resolveRound', () => {
                 unitCount: 5,
               },
             ],
+            [], // Player d has no commands
           ],
           gridState: serializeGrid(grid),
         },
@@ -398,7 +402,7 @@ describe('resolveRound', () => {
     const result = resolveRound(gameState);
     const resolvedGrid = parseGrid(result.rounds[1].gridState);
 
-    // All meet at (1,1)
+    // Players a, b, c meet at (1,1)
     // Player a: 10, b: 7, c: 5
     // Winner: a with 10 - 7 = 3 units, then +1 production = 4
     expect(resolvedGrid[1][1].units).toBe(4);

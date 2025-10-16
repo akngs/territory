@@ -1,8 +1,7 @@
-import { readFile } from 'fs/promises';
-import { join } from 'path';
 import chalk from 'chalk';
 import type { GameState } from '../types.ts';
 import { getPlayerIdChar } from '../grid-utils.ts';
+import { loadGameState } from '../utils.ts';
 
 /**
  * Parse grid state string and count units/resources for display
@@ -70,21 +69,8 @@ function renderGrid(gridState: string): string {
  * Display game state in human-readable format
  */
 export async function showState(gameId: string): Promise<void> {
-  const gamedataDir = join(process.cwd(), 'gamedata');
-  const gameDir = join(gamedataDir, gameId);
-  const stateFile = join(gameDir, 'game-state.json');
-
-  // Load game state
-  let gameState: GameState;
-  try {
-    const content = await readFile(stateFile, 'utf-8');
-    gameState = JSON.parse(content);
-  } catch (err: any) {
-    if (err.code === 'ENOENT') {
-      throw new Error(`Game "${gameId}" not found`);
-    }
-    throw err;
-  }
+  // Load game state using utility (handles errors)
+  const gameState = await loadGameState(gameId);
 
   // Display rounds history
   for (let i = 0; i < gameState.rounds.length; i++) {

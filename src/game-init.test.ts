@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generateStartingPositions, performInitialSetup } from './game-init.ts';
+import { generateStartingPositions, performInitialSetup } from './commands/init.ts';
 import { DEFAULT_CONFIG } from './types.ts';
 
 describe('generateStartingPositions', () => {

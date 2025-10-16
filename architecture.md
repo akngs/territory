@@ -21,16 +21,16 @@ The application follows a **modular, command-based architecture** with clear sep
 ## Core Components
 
 ### 1. Command Router (`cli.ts`)
-Entry point using Commander.js. Routes commands: `init`, `state`, `discuss`, `cmds`, `help-game`.
+Entry point using Commander.js with unified error handling wrapper. Routes commands: `init`, `state`, `discuss`, `cmds`, `help-game`.
 
-### 2. Game Initialization (`game-init.ts`)
-Creates new games with randomized starting positions, resource squares, and initial grid state.
+### 2. Game Initialization (`commands/init.ts`)
+Creates new games with randomized starting positions, resource squares, and initial grid state. Contains all initialization logic in a single module.
 
 ### 3. Round Resolution (`resolve.ts`)
-Processes simultaneous movements, resolves combat, applies production, and checks win conditions.
+Processes simultaneous movements, resolves combat, applies production, and checks win conditions. Uses strongly-typed GridSquare[][] throughout.
 
 ### 4. Grid System (`grid-utils.ts`)
-Compact serialization format: `NNp?` (units, player, type). Supports parsing, building, and manipulation.
+Compact serialization format: `NNp?` (units, player, type). Exports GridSquare type for type-safe grid manipulation.
 
 ### 5. Shared Utilities (`utils.ts`)
 Common functions: game loading/saving, stdin reading, coordinate calculations, validation.
@@ -85,5 +85,14 @@ Clean separation enables easy extensions:
 - **New commands**: Add handlers in `commands/` directory
 - **Game mechanics**: Modify `resolve.ts` for new rules
 - **Utilities**: Shared code in `utils.ts` prevents duplication
-- **Type safety**: TypeScript contracts ensure safe modifications
+- **Type safety**: Strict TypeScript with exported types (GridSquare) ensures safe modifications
 - **Testing**: Comprehensive test suite catches regressions
+
+## Recent Simplifications (2025)
+
+The architecture has been streamlined to reduce complexity:
+1. **CLI error handling**: Unified error wrapper eliminates duplicate try-catch blocks
+2. **Type safety**: GridSquare interface exported, replacing `any[][]` usage
+3. **Module consolidation**: game-init.ts merged into commands/init.ts
+4. **Consistent I/O**: All modules use loadGameState/saveGameState utilities
+5. **Bug fixes**: Commands field properly initialized as array instead of object

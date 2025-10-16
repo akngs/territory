@@ -7,6 +7,26 @@ import { discussCommand } from './commands/discuss.ts';
 import { cmdsCommand } from './commands/cmds.ts';
 import { helpCommand } from './commands/help.ts';
 
+/**
+ * Wraps async command functions with error handling
+ */
+function wrapCommand<T extends any[]>(
+  fn: (...args: T) => Promise<void>
+): (...args: T) => Promise<void> {
+  return async (...args: T) => {
+    try {
+      await fn(...args);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`Error: ${error.message}`);
+      } else {
+        console.error('An unknown error occurred');
+      }
+      process.exit(1);
+    }
+  };
+}
+
 const program = new Command();
 
 program
@@ -19,73 +39,31 @@ program
   .description('Initialize a new game')
   .argument('<game_id>', 'Unique identifier for the game')
   .argument('<num_players>', 'Number of players (3-20)')
-  .action(async (gameId: string, numPlayersStr: string) => {
-    try {
-      const numPlayers = parseInt(numPlayersStr, 10);
-      if (isNaN(numPlayers)) {
-        throw new Error('Number of players must be a valid integer');
-      }
-      await initGame(gameId, numPlayers);
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(`Error: ${error.message}`);
-      } else {
-        console.error('An unknown error occurred');
-      }
-      process.exit(1);
+  .action(wrapCommand(async (gameId: string, numPlayersStr: string) => {
+    const numPlayers = parseInt(numPlayersStr, 10);
+    if (isNaN(numPlayers)) {
+      throw new Error('Number of players must be a valid integer');
     }
-  });
+    await initGame(gameId, numPlayers);
+  }));
 
 program
   .command('state')
   .description('Show game state')
   .argument('<game_id>', 'Game identifier')
-  .action(async (gameId: string) => {
-    try {
-      await showState(gameId);
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(`Error: ${error.message}`);
-      } else {
-        console.error('An unknown error occurred');
-      }
-      process.exit(1);
-    }
-  });
+  .action(wrapCommand(showState));
 
 program
   .command('discuss')
   .description('Record player discussions/declarations from stdin')
   .argument('<game_id>', 'Game identifier')
-  .action(async (gameId: string) => {
-    try {
-      await discussCommand(gameId);
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(`Error: ${error.message}`);
-      } else {
-        console.error('An unknown error occurred');
-      }
-      process.exit(1);
-    }
-  });
+  .action(wrapCommand(discussCommand));
 
 program
   .command('cmds')
   .description('Submit player movement commands from stdin (one line per player, commands separated by |)')
   .argument('<game_id>', 'Game identifier')
-  .action(async (gameId: string) => {
-    try {
-      await cmdsCommand(gameId);
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(`Error: ${error.message}`);
-      } else {
-        console.error('An unknown error occurred');
-      }
-      process.exit(1);
-    }
-  });
+  .action(wrapCommand(cmdsCommand));
 
 program
   .command('help-game')

@@ -1,5 +1,5 @@
 import type { GameState, Command, Coordinate } from '../types.ts';
-import { getPlayerIdChar, parseGrid, getSquare } from '../grid-utils.ts';
+import { getPlayerIdChar, parseGrid, getSquare, type GridSquare } from '../grid-utils.ts';
 import { resolveRound } from '../resolve.ts';
 import { readLines, getTargetCoord, isValidDirection, loadGameState, saveGameState } from '../utils.ts';
 
@@ -43,7 +43,7 @@ export function parseCommand(cmdStr: string, playerIndex: number): Command | str
 export function validateCommand(
   cmd: Command,
   playerId: string,
-  grid: any[][],
+  grid: GridSquare[][],
   mapSize: number
 ): string | null {
   // Check source coordinate is in bounds
@@ -83,7 +83,7 @@ export function parsePlayerCommands(
   line: string,
   playerIndex: number,
   playerId: string,
-  grid: any[][],
+  grid: GridSquare[][],
   mapSize: number,
   maxCommands: number
 ): Command[] | string {

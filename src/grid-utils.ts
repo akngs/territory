@@ -1,9 +1,9 @@
 import type { Coordinate, GridState } from './types.ts';
 
 /**
- * Internal grid representation for building
+ * Grid representation for building and manipulation
  */
-interface GridSquare {
+export interface GridSquare {
   units: number;
   playerId: string; // '.' for neutral, 'a'-'z' for players
   isResource: boolean;
