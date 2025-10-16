@@ -77,7 +77,13 @@ export async function showState(gameId: string): Promise<void> {
   }
 
   // Display rounds history
-  for (const round of gameState.rounds) {
+  for (let i = 0; i < gameState.rounds.length; i++) {
+    const round = gameState.rounds[i];
+
+    if (i > 0) {
+      console.log();
+    }
+
     console.log(chalk.cyan(`## Round ${round.roundNumber}/${gameState.config.MAX_ROUNDS}`));
     console.log();
 
