@@ -75,27 +75,18 @@ export async function showState(gameId: string): Promise<void> {
     throw err;
   }
 
-  // Display header
-  console.log(`=== Game: ${gameState.gameId} ===`);
-  console.log();
-
   // Display configuration
-  console.log('Configuration:');
-  console.log(`  Players: ${gameState.numPlayers}`);
-  console.log(`  Map: ${gameState.config.MAP_SIZE}×${gameState.config.MAP_SIZE}`);
-  console.log(`  Max Rounds: ${gameState.config.MAX_ROUNDS}`);
-  console.log(`  Starting Units: ${gameState.config.STARTING_UNITS}`);
-  console.log();
-
-  // Display current round
-  console.log(`Current Round: ${gameState.currentRound}`);
+  console.log(`## Configuration`);
+  console.log(`Players: ${gameState.numPlayers}`);
+  console.log(`Map: ${gameState.config.MAP_SIZE}×${gameState.config.MAP_SIZE}`);
+  console.log(`Max Rounds: ${gameState.config.MAX_ROUNDS}`);
   console.log();
 
   // Display rounds history
-  console.log(`Rounds: ${gameState.rounds.length}`);
+  console.log(`## Rounds (${gameState.rounds.length})`);
   for (const round of gameState.rounds) {
     console.log();
-    console.log(`Round ${round.roundNumber}:`);
+    console.log(`### Round ${round.roundNumber}`);
     console.log();
 
     // Render the grid
@@ -109,26 +100,26 @@ export async function showState(gameId: string): Promise<void> {
     const playerIds = Array.from(summary.playerUnits.keys()).sort();
     for (const playerId of playerIds) {
       const units = summary.playerUnits.get(playerId) || 0;
-      console.log(`  Player ${playerId}: ${units} units`);
+      console.log(`Player ${playerId}: ${units} units`);
     }
-
-    console.log(`  Resources: ${summary.resourceCount} squares`);
 
     // Show declarations if any
     if (round.declarations.length > 0) {
-      console.log(`  Declarations:`);
+      console.log();
+      console.log(`Declarations:`);
       for (const decl of round.declarations) {
-        console.log(`    [${decl.playerId}#${decl.declarationNumber}] ${decl.text}`);
+        console.log(`  [${decl.playerId}#${decl.declarationNumber}] ${decl.text}`);
       }
     }
 
     // Show commands if any
     const playerIdsWithCommands = Object.keys(round.commands);
     if (playerIdsWithCommands.length > 0) {
-      console.log(`  Commands:`);
+      console.log();
+      console.log(`Commands:`);
       for (const playerId of playerIdsWithCommands) {
         const commands = round.commands[playerId];
-        console.log(`    [${playerId}] ${commands.length} command(s)`);
+        console.log(`  [${playerId}] ${commands.length} command(s)`);
       }
     }
   }
