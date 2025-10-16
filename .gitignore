@@ -9,3 +9,6 @@ gamedata/
 
 # Test coverage reports
 coverage/
+
+# Code duplication reports
+.jscpd/

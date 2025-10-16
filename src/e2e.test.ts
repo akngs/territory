@@ -117,14 +117,9 @@ describe('End-to-End Game Flow', () => {
 
     const { serializeGrid } = await import('./grid-utils.ts');
     gameState.rounds[0].gridState = serializeGrid(grid);
-    gameState.rounds[0].declarations = [
-      '', '', '', '', '', ''
-    ];
+    gameState.rounds[0].declarations = ['', '', '', '', '', ''];
 
-    await fs.writeFile(
-      `${TEST_GAME_PATH}/game-state.json`,
-      JSON.stringify(gameState, null, 2)
-    );
+    await fs.writeFile(`${TEST_GAME_PATH}/game-state.json`, JSON.stringify(gameState, null, 2));
 
     // Submit no-op commands
     await execPromise(`echo "\\n\\n\\n" | ${CLI_PATH} cmds ${TEST_GAME_ID}`);
@@ -155,7 +150,9 @@ describe('End-to-End Game Flow', () => {
 
     // Play through 2 rounds (smaller grid means faster domination)
     for (let round = 1; round <= 2; round++) {
-      await execPromise(`echo "R${round}-A\\nR${round}-B\\nR${round}-C\\n" | ${CLI_PATH} discuss ${TEST_GAME_ID}`);
+      await execPromise(
+        `echo "R${round}-A\\nR${round}-B\\nR${round}-C\\n" | ${CLI_PATH} discuss ${TEST_GAME_ID}`
+      );
       await execPromise(`echo "Go!\\nGo!\\nGo!\\n" | ${CLI_PATH} discuss ${TEST_GAME_ID}`);
       await execPromise(`echo "\\n\\n\\n" | ${CLI_PATH} cmds ${TEST_GAME_ID}`);
     }

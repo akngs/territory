@@ -1,0 +1,7 @@
+node_modules
+dist
+gamedata
+*.json
+!.prettierrc.json
+!tsconfig.json
+!package.json

@@ -45,10 +45,12 @@ function getOuterEdgeCoordinates(mapSize: number): Coordinate[] {
 
 /**
  * Shuffle array using Fisher-Yates algorithm
+ * Note: Math.random() is safe here - used for game initialization, not security
  */
 function shuffle<T>(array: T[]): T[] {
   const result = [...array];
   for (let i = result.length - 1; i > 0; i--) {
+    // eslint-disable-next-line sonarjs/pseudo-random
     const j = Math.floor(Math.random() * (i + 1));
     [result[i], result[j]] = [result[j], result[i]];
   }
@@ -100,7 +102,7 @@ export function performInitialSetup(
   const availableCoords: Coordinate[] = [];
   for (let x = 0; x < config.MAP_SIZE; x++) {
     for (let y = 0; y < config.MAP_SIZE; y++) {
-      const isStarting = startingCoords.some(pos => pos.x === x && pos.y === y);
+      const isStarting = startingCoords.some((pos) => pos.x === x && pos.y === y);
       if (!isStarting) {
         availableCoords.push({ x, y });
       }
@@ -139,7 +141,9 @@ export async function initGame(gameId: string, numPlayers: number): Promise<void
 
   // Validate number of players
   if (numPlayers < DEFAULT_CONFIG.MIN_PLAYERS || numPlayers > DEFAULT_CONFIG.MAX_PLAYERS) {
-    throw new Error(`Number of players must be between ${DEFAULT_CONFIG.MIN_PLAYERS} and ${DEFAULT_CONFIG.MAX_PLAYERS}`);
+    throw new Error(
+      `Number of players must be between ${DEFAULT_CONFIG.MIN_PLAYERS} and ${DEFAULT_CONFIG.MAX_PLAYERS}`
+    );
   }
 
   // Sanitize game ID to prevent directory traversal
@@ -159,8 +163,8 @@ export async function initGame(gameId: string, numPlayers: number): Promise<void
   try {
     await access(gameDir);
     throw new Error(`Game "${sanitizedGameId}" already exists in gamedata/`);
-  } catch (err: any) {
-    if (err.code !== 'ENOENT') {
+  } catch (err: unknown) {
+    if (err instanceof Error && 'code' in err && err.code !== 'ENOENT') {
       throw err;
     }
     // Directory doesn't exist, which is what we want
@@ -170,7 +174,7 @@ export async function initGame(gameId: string, numPlayers: number): Promise<void
   await mkdir(gameDir, { recursive: true });
 
   // Perform initial setup
-  const { initialRound, startingPositions } = performInitialSetup(numPlayers, DEFAULT_CONFIG);
+  const { initialRound } = performInitialSetup(numPlayers, DEFAULT_CONFIG);
 
   // Initialize game state
   const initialState: GameState = {

@@ -64,7 +64,7 @@ export type GridState = string;
 /**
  * Direction for movement commands
  */
-export type Direction = "U" | "D" | "L" | "R";
+export type Direction = 'U' | 'D' | 'L' | 'R';
 
 /**
  * A movement command

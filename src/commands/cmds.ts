@@ -1,16 +1,30 @@
-import type { GameState, Command, Coordinate } from '../types.ts';
+import type { Command, RoundRecord } from '../types.ts';
 import { getPlayerIdChar, parseGrid, getSquare, type GridSquare } from '../grid-utils.ts';
 import { resolveRound } from '../resolve.ts';
-import { readLines, getTargetCoord, isValidDirection, loadGameState, saveGameState } from '../utils.ts';
+import {
+  readLines,
+  getTargetCoord,
+  isValidDirection,
+  loadGameState,
+  saveGameState,
+} from '../utils.ts';
+
+/**
+ * Result of parsing a command
+ */
+type ParseCommandResult = { success: true; command: Command } | { success: false; error: string };
 
 /**
  * Parse a single command string (format: "x,y,direction,count")
  */
-export function parseCommand(cmdStr: string, playerIndex: number): Command | string {
+export function parseCommand(cmdStr: string, _playerIndex: number): ParseCommandResult {
   const parts = cmdStr.trim().split(',');
 
   if (parts.length !== 4) {
-    return `Invalid command format "${cmdStr}". Expected: x,y,direction,count (e.g., "3,4,R,5")`;
+    return {
+      success: false,
+      error: `Invalid command format "${cmdStr}". Expected: x,y,direction,count (e.g., "3,4,R,5")`,
+    };
   }
 
   const x = parseInt(parts[0], 10);
@@ -19,21 +33,33 @@ export function parseCommand(cmdStr: string, playerIndex: number): Command | str
   const unitCount = parseInt(parts[3], 10);
 
   if (isNaN(x) || isNaN(y)) {
-    return `Invalid coordinates in "${cmdStr}". Both x and y must be numbers (e.g., "3,4,R,5")`;
+    return {
+      success: false,
+      error: `Invalid coordinates in "${cmdStr}". Both x and y must be numbers (e.g., "3,4,R,5")`,
+    };
   }
 
   if (!isValidDirection(direction)) {
-    return `Invalid direction "${direction}" in "${cmdStr}". Must be U (up), D (down), L (left), or R (right)`;
+    return {
+      success: false,
+      error: `Invalid direction "${direction}" in "${cmdStr}". Must be U (up), D (down), L (left), or R (right)`,
+    };
   }
 
   if (isNaN(unitCount) || unitCount <= 0) {
-    return `Invalid unit count in "${cmdStr}". Must be a positive number greater than 0`;
+    return {
+      success: false,
+      error: `Invalid unit count in "${cmdStr}". Must be a positive number greater than 0`,
+    };
   }
 
   return {
-    from: { x, y },
-    direction,
-    unitCount,
+    success: true,
+    command: {
+      from: { x, y },
+      direction,
+      unitCount,
+    },
   };
 }
 
@@ -77,6 +103,13 @@ export function validateCommand(
 }
 
 /**
+ * Result of parsing player commands
+ */
+type ParsePlayerCommandsResult =
+  | { success: true; commands: Command[] }
+  | { success: false; error: string };
+
+/**
  * Parse commands from a single line (format: "cmd1|cmd2|cmd3")
  */
 export function parsePlayerCommands(
@@ -86,15 +119,18 @@ export function parsePlayerCommands(
   grid: GridSquare[][],
   mapSize: number,
   maxCommands: number
-): Command[] | string {
+): ParsePlayerCommandsResult {
   if (line.trim() === '') {
-    return []; // No commands for this player
+    return { success: true, commands: [] }; // No commands for this player
   }
 
   const cmdStrings = line.split('|');
 
   if (cmdStrings.length > maxCommands) {
-    return `Too many commands (${cmdStrings.length}). Maximum is ${maxCommands}`;
+    return {
+      success: false,
+      error: `Too many commands (${cmdStrings.length}). Maximum is ${maxCommands}`,
+    };
   }
 
   const commands: Command[] = [];
@@ -102,20 +138,50 @@ export function parsePlayerCommands(
   for (const cmdStr of cmdStrings) {
     const result = parseCommand(cmdStr, playerIndex);
 
-    if (typeof result === 'string') {
-      return `Player ${playerId}: ${result}`;
+    if (!result.success) {
+      return { success: false, error: `Player ${playerId}: ${result.error}` };
     }
 
     // Validate the command
-    const validationError = validateCommand(result, playerId, grid, mapSize);
+    const validationError = validateCommand(result.command, playerId, grid, mapSize);
     if (validationError) {
-      return `Player ${playerId}: ${validationError}`;
+      return { success: false, error: `Player ${playerId}: ${validationError}` };
     }
 
-    commands.push(result);
+    commands.push(result.command);
   }
 
-  return commands;
+  return { success: true, commands };
+}
+
+/**
+ * Validate that commands can be submitted for the current round
+ */
+function validateCommandPhase(
+  currentRound: RoundRecord,
+  numPlayers: number,
+  declarationCount: number
+): { valid: true } | { valid: false; error: string; hint?: string } {
+  // Check if declarations are complete
+  const expectedDeclarations = numPlayers * declarationCount;
+  if (currentRound.declarations.length < expectedDeclarations) {
+    return {
+      valid: false,
+      error: `Declaration phase not complete for round ${currentRound.roundNumber}. Expected ${expectedDeclarations} declarations (${numPlayers} players × ${declarationCount} phases), but got ${currentRound.declarations.length}`,
+      hint: `Use 'discuss <game_id>' to submit declarations first`,
+    };
+  }
+
+  // Check if commands already submitted
+  if (currentRound.commands.length > 0) {
+    return {
+      valid: false,
+      error: `Commands have already been submitted for round ${currentRound.roundNumber}`,
+      hint: `Round ${currentRound.roundNumber} is complete`,
+    };
+  }
+
+  return { valid: true };
 }
 
 /**
@@ -131,26 +197,16 @@ export async function cmdsCommand(gameId: string): Promise<void> {
   const maxCommands = gameState.config.MAX_COMMANDS_PER_ROUND;
   const mapSize = gameState.config.MAP_SIZE;
 
-  // Check if declarations are complete
-  const expectedDeclarations = numPlayers * gameState.config.DECLARATION_COUNT;
-  if (currentRound.declarations.length < expectedDeclarations) {
-    console.error(
-      `Error: Declaration phase not complete for round ${currentRound.roundNumber}`
+  // Validate command phase
+  const validation = validateCommandPhase(
+    currentRound,
+    numPlayers,
+    gameState.config.DECLARATION_COUNT
+  );
+  if (!validation.valid) {
+    throw new Error(
+      validation.hint ? `${validation.error}. Hint: ${validation.hint}` : validation.error
     );
-    console.error(
-      `Expected ${expectedDeclarations} declarations (${numPlayers} players × ${gameState.config.DECLARATION_COUNT} phases), but got ${currentRound.declarations.length}`
-    );
-    console.error(`Hint: Use 'discuss <game_id>' to submit declarations first`);
-    process.exit(1);
-  }
-
-  // Check if commands already submitted
-  if (currentRound.commands.length > 0) {
-    console.error(
-      `Error: Commands have already been submitted for round ${currentRound.roundNumber}`
-    );
-    console.error(`Hint: Round ${currentRound.roundNumber} is complete`);
-    process.exit(1);
   }
 
   // Parse the grid state
@@ -159,52 +215,44 @@ export async function cmdsCommand(gameId: string): Promise<void> {
   // Read n lines from stdin (one per player)
   const lines = await readLines(numPlayers);
 
-  if (lines.length < numPlayers) {
-    console.error(`Error: Expected ${numPlayers} lines but got ${lines.length}`);
-    process.exit(1);
-  }
-
   // Parse and validate commands for each player
   const allCommands: Command[][] = [];
 
   for (let i = 0; i < numPlayers; i++) {
     const playerId = getPlayerIdChar(i);
     const playerNumber = i + 1;
-    const result = parsePlayerCommands(
-      lines[i],
-      i,
-      playerId,
-      grid,
-      mapSize,
-      maxCommands
-    );
+    const result = parsePlayerCommands(lines[i], i, playerId, grid, mapSize, maxCommands);
 
-    if (typeof result === 'string') {
-      console.error(`Error (Player ${playerId}, #${playerNumber}): ${result}`);
-      process.exit(1);
+    if (!result.success) {
+      throw new Error(`Player ${playerId} (#${playerNumber}): ${result.error}`);
     }
 
-    allCommands.push(result);
+    allCommands.push(result.commands);
   }
 
   // Store commands in current round
   currentRound.commands = allCommands;
 
   // Display command summary
-  const totalCommands = allCommands.reduce(
-    (sum, cmds) => sum + cmds.length,
-    0
-  );
+  const totalCommands = allCommands.reduce((sum, cmds) => sum + cmds.length, 0);
 
   console.log(`Commands recorded for round ${currentRound.roundNumber}`);
   console.log(`Players: ${numPlayers}, Total commands: ${totalCommands}`);
 
   // Automatically resolve the round
   console.log(`\nResolving round ${currentRound.roundNumber}...`);
-  const updatedGameState = resolveRound(gameState);
+  const result = resolveRound(gameState);
 
   // Save updated game state
-  await saveGameState(gameId, updatedGameState);
+  await saveGameState(gameId, result.gameState);
 
-  console.log(`Round ${currentRound.roundNumber} resolved successfully`);
+  if (result.winner) {
+    // Game over
+    console.log(`\nGame Over!`);
+    console.log(`Winner: Player ${result.winner}`);
+    const winnerUnits = result.playerUnits?.get(result.winner) || 0;
+    console.log(`Final units: ${winnerUnits}`);
+  } else {
+    console.log(`Round ${currentRound.roundNumber} resolved successfully`);
+  }
 }

@@ -4,6 +4,9 @@ import type { GameState, Coordinate, Direction } from './types.ts';
 
 /**
  * Read n lines from stdin
+ * @param count Number of lines to read
+ * @returns Array of lines read from stdin
+ * @throws {Error} If EOF is reached before reading all lines
  */
 export async function readLines(count: number): Promise<string[]> {
   const lines: string[] = [];
@@ -13,15 +16,26 @@ export async function readLines(count: number): Promise<string[]> {
     terminal: false,
   });
 
-  for await (const line of rl) {
-    lines.push(line);
-    if (lines.length >= count) {
-      rl.close();
-      break;
-    }
-  }
+  return new Promise((resolve, reject) => {
+    rl.on('line', (line) => {
+      lines.push(line);
+      if (lines.length >= count) {
+        rl.close();
+      }
+    });
 
-  return lines;
+    rl.on('close', () => {
+      if (lines.length < count) {
+        reject(new Error(`Expected ${count} lines but only received ${lines.length} before EOF`));
+      } else {
+        resolve(lines);
+      }
+    });
+
+    rl.on('error', (error) => {
+      reject(error);
+    });
+  });
 }
 
 /**
@@ -42,6 +56,7 @@ export function getTargetCoord(from: Coordinate, direction: Direction): Coordina
 
 /**
  * Load game state from file system
+ * @throws {Error} If game is not found or cannot be loaded
  */
 export async function loadGameState(gameId: string): Promise<GameState> {
   const gamePath = `gamedata/${gameId}/game-state.json`;
@@ -49,14 +64,14 @@ export async function loadGameState(gameId: string): Promise<GameState> {
   try {
     const data = await fs.readFile(gamePath, 'utf-8');
     return JSON.parse(data);
-  } catch (error: any) {
-    if (error.code === 'ENOENT') {
-      console.error(`Error: Game "${gameId}" not found in gamedata/ directory`);
-      console.error(`Hint: Use 'init <game_id> <num_players>' to create a new game`);
-    } else {
-      console.error(`Error loading game: ${error.message}`);
+  } catch (error: unknown) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      throw new Error(
+        `Game "${gameId}" not found in gamedata/ directory. Hint: Use 'init <game_id> <num_players>' to create a new game`
+      );
     }
-    process.exit(1);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    throw new Error(`Failed to load game: ${message}`);
   }
 }
 

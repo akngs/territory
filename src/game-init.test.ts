@@ -81,9 +81,7 @@ describe('performInitialSetup', () => {
     // Resource squares
     const resourceCount = (initialRound.gridState.match(/\+/g) || []).length;
     const totalSquares = DEFAULT_CONFIG.MAP_SIZE * DEFAULT_CONFIG.MAP_SIZE;
-    const expectedResources = Math.ceil(
-      (totalSquares * DEFAULT_CONFIG.RESOURCE_SQUARE_PCT) / 100
-    );
+    const expectedResources = Math.ceil((totalSquares * DEFAULT_CONFIG.RESOURCE_SQUARE_PCT) / 100);
     expect(resourceCount).toBe(expectedResources);
 
     // No resources on player positions

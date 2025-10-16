@@ -39,13 +39,15 @@ program
   .description('Initialize a new game')
   .argument('<game_id>', 'Unique identifier for the game')
   .argument('<num_players>', 'Number of players (3-20)')
-  .action(wrapCommand(async (gameId: string, numPlayersStr: string) => {
-    const numPlayers = parseInt(numPlayersStr, 10);
-    if (isNaN(numPlayers)) {
-      throw new Error('Number of players must be a valid integer');
-    }
-    await initGame(gameId, numPlayers);
-  }));
+  .action(
+    wrapCommand(async (gameId: string, numPlayersStr: string) => {
+      const numPlayers = parseInt(numPlayersStr, 10);
+      if (isNaN(numPlayers)) {
+        throw new Error('Number of players must be a valid integer');
+      }
+      await initGame(gameId, numPlayers);
+    })
+  );
 
 program
   .command('state')
@@ -61,7 +63,9 @@ program
 
 program
   .command('cmds')
-  .description('Submit player movement commands from stdin (one line per player, commands separated by |)')
+  .description(
+    'Submit player movement commands from stdin (one line per player, commands separated by |)'
+  )
   .argument('<game_id>', 'Game identifier')
   .action(wrapCommand(cmdsCommand));
 

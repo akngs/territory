@@ -1,0 +1,23 @@
+{
+  "threshold": 0,
+  "reporters": ["html", "console", "badge"],
+  "ignore": [
+    "node_modules/**",
+    "dist/**",
+    "gamedata/**",
+    "**/*.test.ts",
+    "**/*.json",
+    ".jscpd/**"
+  ],
+  "absolute": true,
+  "gitignore": true,
+  "format": ["typescript", "javascript"],
+  "minLines": 5,
+  "minTokens": 50,
+  "maxLines": 500,
+  "maxSize": "100kb",
+  "output": ".jscpd",
+  "blame": false,
+  "silent": false,
+  "verbose": false
+}

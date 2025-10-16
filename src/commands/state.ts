@@ -1,7 +1,7 @@
 import chalk from 'chalk';
-import type { GameState } from '../types.ts';
 import { getPlayerIdChar } from '../grid-utils.ts';
 import { loadGameState } from '../utils.ts';
+import type { Command, GameState } from '../types.ts';
 
 /**
  * Parse grid state string and count units/resources for display
@@ -46,7 +46,7 @@ function renderGrid(gridState: string): string {
 
   for (let i = 0; i < rows.length; i++) {
     const squares = rows[i].split('|');
-    const displaySquares = squares.map(sq => {
+    const displaySquares = squares.map((sq) => {
       // Format: "NNp?" where ? is '+' for resource or '.' for normal
       const isResource = sq[3] === '+';
       const isNeutral = sq[2] === '.';
@@ -66,10 +66,69 @@ function renderGrid(gridState: string): string {
 }
 
 /**
+ * Display declarations for a round
+ */
+function displayDeclarations(declarations: string[], numPlayers: number): void {
+  if (declarations.length === 0) return;
+
+  console.log();
+  console.log(`Declarations:`);
+  for (let i = 0; i < declarations.length; i++) {
+    const playerIndex = i % numPlayers;
+    const playerId = getPlayerIdChar(playerIndex);
+    const text = declarations[i];
+    console.log(`- ${playerId}: ${text}`);
+  }
+}
+
+/**
+ * Display commands for a round
+ */
+function displayCommands(commands: Command[][]): void {
+  if (commands.length === 0) return;
+
+  console.log();
+  console.log(`Commands:`);
+  for (let i = 0; i < commands.length; i++) {
+    const playerId = getPlayerIdChar(i);
+    const playerCommands = commands[i];
+    if (playerCommands.length === 0) {
+      console.log(`- ${playerId}: (no commands)`);
+    } else {
+      const cmdStrings = playerCommands
+        .map((cmd) => `${cmd.from.x},${cmd.from.y},${cmd.direction},${cmd.unitCount}`)
+        .join(' | ');
+      console.log(`- ${playerId}: ${cmdStrings}`);
+    }
+  }
+}
+
+/**
+ * Determine current game phase
+ */
+function determineGamePhase(gameState: GameState): string {
+  const currentRound = gameState.rounds[gameState.rounds.length - 1];
+  const expectedDeclarations = gameState.numPlayers * gameState.config.DECLARATION_COUNT;
+  const hasCommands = currentRound.commands.length > 0;
+  const hasNextRound = gameState.rounds.length > currentRound.roundNumber;
+
+  if (hasCommands && hasNextRound) {
+    return `Round ${gameState.currentRound} - Awaiting declarations (phase 1/${gameState.config.DECLARATION_COUNT})`;
+  }
+  if (hasCommands && !hasNextRound) {
+    return `Game Over`;
+  }
+  if (currentRound.declarations.length < expectedDeclarations) {
+    const currentPhase = Math.floor(currentRound.declarations.length / gameState.numPlayers) + 1;
+    return `Round ${currentRound.roundNumber} - Awaiting declarations (phase ${currentPhase}/${gameState.config.DECLARATION_COUNT})`;
+  }
+  return `Round ${currentRound.roundNumber} - Awaiting commands`;
+}
+
+/**
  * Display game state in human-readable format
  */
 export async function showState(gameId: string): Promise<void> {
-  // Load game state using utility (handles errors)
   const gameState = await loadGameState(gameId);
 
   // Display rounds history
@@ -92,63 +151,19 @@ export async function showState(gameId: string): Promise<void> {
     // Parse grid summary
     const summary = parseGridSummary(round.gridState);
 
-    // Show player units
-    const playerIds = Array.from(summary.playerUnits.keys()).sort();
-    const unitsList = playerIds.map(id => `${id}=${summary.playerUnits.get(id) || 0}`).join(', ');
+    // Show player units (use localeCompare for alphabetical sort)
+    const playerIds = Array.from(summary.playerUnits.keys()).sort((a, b) => a.localeCompare(b));
+    const unitsList = playerIds.map((id) => `${id}=${summary.playerUnits.get(id) || 0}`).join(', ');
     console.log(`Units: ${unitsList}`);
 
-    // Show declarations if any
-    if (round.declarations.length > 0) {
-      console.log();
-      console.log(`Declarations:`);
-      for (let i = 0; i < round.declarations.length; i++) {
-        const playerIndex = i % gameState.numPlayers;
-        const playerId = getPlayerIdChar(playerIndex);
-        const text = round.declarations[i];
-        console.log(`- ${playerId}: ${text}`);
-      }
-    }
-
-    // Show commands if any
-    if (round.commands.length > 0) {
-      console.log();
-      console.log(`Commands:`);
-      for (let i = 0; i < round.commands.length; i++) {
-        const playerId = getPlayerIdChar(i);
-        const commands = round.commands[i];
-        if (commands.length === 0) {
-          console.log(`- ${playerId}: (no commands)`);
-        } else {
-          const cmdStrings = commands.map(cmd =>
-            `${cmd.from.x},${cmd.from.y},${cmd.direction},${cmd.unitCount}`
-          ).join(' | ');
-          console.log(`- ${playerId}: ${cmdStrings}`);
-        }
-      }
-    }
+    // Show declarations and commands
+    displayDeclarations(round.declarations, gameState.numPlayers);
+    displayCommands(round.commands);
   }
 
-  // Determine current phase
-  const currentRound = gameState.rounds[gameState.rounds.length - 1];
-  const expectedDeclarations = gameState.numPlayers * gameState.config.DECLARATION_COUNT;
-  const hasCommands = currentRound.commands.length > 0;
-  const hasNextRound = gameState.rounds.length > currentRound.roundNumber;
-
-  let phase = '';
-  if (hasCommands && hasNextRound) {
-    phase = `Round ${gameState.currentRound} - Awaiting declarations (phase 1/${gameState.config.DECLARATION_COUNT})`;
-  } else if (hasCommands && !hasNextRound) {
-    phase = `Game Over`;
-  } else if (currentRound.declarations.length < expectedDeclarations) {
-    const currentPhase = Math.floor(currentRound.declarations.length / gameState.numPlayers) + 1;
-    phase = `Round ${currentRound.roundNumber} - Awaiting declarations (phase ${currentPhase}/${gameState.config.DECLARATION_COUNT})`;
-  } else {
-    phase = `Round ${currentRound.roundNumber} - Awaiting commands`;
-  }
-
-  // Display summary at the end
+  // Display summary
   console.log();
   console.log(chalk.cyan(`## Summary`));
-  console.log(phase);
+  console.log(determineGamePhase(gameState));
   console.log();
 }

@@ -6,44 +6,58 @@ import { createEmptyGridBuilder, placeUnits } from '../grid-utils.ts';
 describe('parseCommand', () => {
   it('should parse a valid command string', () => {
     const result = parseCommand('0,0,R,2', 0);
-    expect(result).toEqual({
-      from: { x: 0, y: 0 },
-      direction: 'R',
-      unitCount: 2,
-    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.command).toEqual({
+        from: { x: 0, y: 0 },
+        direction: 'R',
+        unitCount: 2,
+      });
+    }
   });
 
   it('should handle lowercase directions', () => {
     const result = parseCommand('1,2,u,3', 0);
-    expect(result).toEqual({
-      from: { x: 1, y: 2 },
-      direction: 'U',
-      unitCount: 3,
-    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.command).toEqual({
+        from: { x: 1, y: 2 },
+        direction: 'U',
+        unitCount: 3,
+      });
+    }
   });
 
   it('should return error for invalid format', () => {
     const result = parseCommand('0,0,R', 0);
-    expect(typeof result).toBe('string');
-    expect(result).toContain('Invalid command format');
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain('Invalid command format');
+    }
   });
 
   it('should return error for invalid direction', () => {
     const result = parseCommand('0,0,X,2', 0);
-    expect(typeof result).toBe('string');
-    expect(result).toContain('Invalid direction');
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain('Invalid direction');
+    }
   });
 
   it('should return error for invalid coordinates', () => {
     const result = parseCommand('a,b,R,2', 0);
-    expect(typeof result).toBe('string');
-    expect(result).toContain('Invalid coordinates');
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain('Invalid coordinates');
+    }
   });
 
   it('should return error for invalid unit count', () => {
     const result = parseCommand('0,0,R,abc', 0);
-    expect(typeof result).toBe('string');
-    expect(result).toContain('Invalid unit count');
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain('Invalid unit count');
+    }
   });
 });
 
@@ -126,27 +140,30 @@ describe('parsePlayerCommands', () => {
 
     const result = parsePlayerCommands('0,0,R,2|1,0,R,1', 0, 'a', grid, 5, 3);
 
-    expect(Array.isArray(result)).toBe(true);
-    const commands = result as Command[];
-    expect(commands).toHaveLength(2);
-    expect(commands[0]).toEqual({
-      from: { x: 0, y: 0 },
-      direction: 'R',
-      unitCount: 2,
-    });
-    expect(commands[1]).toEqual({
-      from: { x: 1, y: 0 },
-      direction: 'R',
-      unitCount: 1,
-    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.commands).toHaveLength(2);
+      expect(result.commands[0]).toEqual({
+        from: { x: 0, y: 0 },
+        direction: 'R',
+        unitCount: 2,
+      });
+      expect(result.commands[1]).toEqual({
+        from: { x: 1, y: 0 },
+        direction: 'R',
+        unitCount: 1,
+      });
+    }
   });
 
   it('should return empty array for empty line', () => {
     const grid = createEmptyGridBuilder(5);
     const result = parsePlayerCommands('', 0, 'a', grid, 5, 3);
 
-    expect(Array.isArray(result)).toBe(true);
-    expect(result).toHaveLength(0);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.commands).toHaveLength(0);
+    }
   });
 
   it('should return error if too many commands', () => {
@@ -165,8 +182,10 @@ describe('parsePlayerCommands', () => {
       3 // Max 3 commands
     );
 
-    expect(typeof result).toBe('string');
-    expect(result).toContain('Too many commands');
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain('Too many commands');
+    }
   });
 
   it('should return error if command parsing fails', () => {
@@ -175,8 +194,10 @@ describe('parsePlayerCommands', () => {
 
     const result = parsePlayerCommands('0,0,R', 0, 'a', grid, 5, 3);
 
-    expect(typeof result).toBe('string');
-    expect(result).toContain('Invalid command format');
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain('Invalid command format');
+    }
   });
 
   it('should return error if command validation fails', () => {
@@ -185,7 +206,9 @@ describe('parsePlayerCommands', () => {
 
     const result = parsePlayerCommands('0,0,R,5', 0, 'a', grid, 5, 3);
 
-    expect(typeof result).toBe('string');
-    expect(result).toContain('Insufficient units');
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain('Insufficient units');
+    }
   });
 });
