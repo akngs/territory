@@ -76,22 +76,16 @@ export interface Command {
 }
 
 /**
- * Player's declaration (plan)
- */
-export interface Declaration {
-  playerId: string; // Single character: 'a', 'b', 'c', etc.
-  text: string;
-  declarationNumber: number; // 1 or 2
-}
-
-/**
  * A single round's complete record
  * Grid state represents the state AFTER the round is resolved
+ *
+ * Declarations: Array of strings, ordered by player (a, b, c, ...) then by phase
+ * Commands: Array of command arrays, commands[0] = player 'a', commands[1] = player 'b', etc.
  */
 export interface RoundRecord {
   roundNumber: number;
-  declarations: Declaration[];
-  commands: { [playerId: string]: Command[] };
+  declarations: string[];
+  commands: Command[][];
   gridState: GridState;
 }
 

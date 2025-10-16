@@ -118,7 +118,7 @@ export function performInitialSetup(
   const initialRound: RoundRecord = {
     roundNumber: 1,
     declarations: [],
-    commands: {},
+    commands: [],
     gridState: grid,
   };
 

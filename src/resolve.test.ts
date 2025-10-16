@@ -19,15 +19,15 @@ describe('resolveRound', () => {
         {
           roundNumber: 1,
           declarations: [],
-          commands: {
-            a: [
+          commands: [
+            [
               {
                 from: { x: 0, y: 0 },
                 direction: 'R',
                 unitCount: 3,
               },
             ],
-          },
+          ],
           gridState: serializeGrid(grid),
         },
       ],
@@ -58,15 +58,15 @@ describe('resolveRound', () => {
         {
           roundNumber: 1,
           declarations: [],
-          commands: {
-            a: [
+          commands: [
+            [
               {
                 from: { x: 0, y: 0 },
                 direction: 'R',
                 unitCount: 5,
               },
             ],
-          },
+          ],
           gridState: serializeGrid(grid),
         },
       ],
@@ -98,22 +98,22 @@ describe('resolveRound', () => {
         {
           roundNumber: 1,
           declarations: [],
-          commands: {
-            a: [
+          commands: [
+            [
               {
                 from: { x: 0, y: 0 },
                 direction: 'R',
                 unitCount: 10,
               },
             ],
-            b: [
+            [
               {
                 from: { x: 2, y: 0 },
                 direction: 'L',
                 unitCount: 5,
               },
             ],
-          },
+          ],
           gridState: serializeGrid(grid),
         },
       ],
@@ -143,22 +143,22 @@ describe('resolveRound', () => {
         {
           roundNumber: 1,
           declarations: [],
-          commands: {
-            a: [
+          commands: [
+            [
               {
                 from: { x: 0, y: 0 },
                 direction: 'R',
                 unitCount: 5,
               },
             ],
-            b: [
+            [
               {
                 from: { x: 2, y: 0 },
                 direction: 'L',
                 unitCount: 5,
               },
             ],
-          },
+          ],
           gridState: serializeGrid(grid),
         },
       ],
@@ -185,9 +185,9 @@ describe('resolveRound', () => {
         {
           roundNumber: 1,
           declarations: [],
-          commands: {
-            a: [], // No movements
-          },
+          commands: [
+            [], // No movements for player a
+          ],
           gridState: serializeGrid(grid),
         },
       ],
@@ -214,9 +214,9 @@ describe('resolveRound', () => {
         {
           roundNumber: 1,
           declarations: [],
-          commands: {
-            a: [],
-          },
+          commands: [
+            [],
+          ],
           gridState: serializeGrid(grid),
         },
       ],
@@ -242,9 +242,9 @@ describe('resolveRound', () => {
         {
           roundNumber: 1,
           declarations: [],
-          commands: {
-            a: [],
-          },
+          commands: [
+            [],
+          ],
           gridState: serializeGrid(grid),
         },
       ],
@@ -271,10 +271,10 @@ describe('resolveRound', () => {
         {
           roundNumber: 1,
           declarations: [],
-          commands: {
-            a: [],
-            b: [],
-          },
+          commands: [
+            [],
+            [],
+          ],
           gridState: serializeGrid(grid),
         },
       ],
@@ -289,7 +289,7 @@ describe('resolveRound', () => {
 
     // New round should have empty commands and declarations
     expect(result.rounds[1].declarations).toEqual([]);
-    expect(result.rounds[1].commands).toEqual({});
+    expect(result.rounds[1].commands).toEqual([]);
   });
 
   it('should handle multiple movements to same square', () => {
@@ -305,8 +305,8 @@ describe('resolveRound', () => {
         {
           roundNumber: 1,
           declarations: [],
-          commands: {
-            a: [
+          commands: [
+            [
               {
                 from: { x: 0, y: 0 },
                 direction: 'R',
@@ -318,7 +318,7 @@ describe('resolveRound', () => {
                 unitCount: 2,
               },
             ],
-          },
+          ],
           gridState: serializeGrid(grid),
         },
       ],
@@ -349,29 +349,29 @@ describe('resolveRound', () => {
         {
           roundNumber: 1,
           declarations: [],
-          commands: {
-            a: [
+          commands: [
+            [
               {
                 from: { x: 0, y: 1 },
                 direction: 'R',
                 unitCount: 10,
               },
             ],
-            b: [
+            [
               {
                 from: { x: 2, y: 1 },
                 direction: 'L',
                 unitCount: 7,
               },
             ],
-            c: [
+            [
               {
                 from: { x: 1, y: 0 },
                 direction: 'D',
                 unitCount: 5,
               },
             ],
-          },
+          ],
           gridState: serializeGrid(grid),
         },
       ],

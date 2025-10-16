@@ -145,7 +145,7 @@ export async function cmdsCommand(gameId: string): Promise<void> {
   }
 
   // Check if commands already submitted
-  if (Object.keys(currentRound.commands).length > 0) {
+  if (currentRound.commands.length > 0) {
     console.error(
       `Error: Commands have already been submitted for round ${currentRound.roundNumber}`
     );
@@ -165,7 +165,7 @@ export async function cmdsCommand(gameId: string): Promise<void> {
   }
 
   // Parse and validate commands for each player
-  const allCommands: { [playerId: string]: Command[] } = {};
+  const allCommands: Command[][] = [];
 
   for (let i = 0; i < numPlayers; i++) {
     const playerId = getPlayerIdChar(i);
@@ -184,14 +184,14 @@ export async function cmdsCommand(gameId: string): Promise<void> {
       process.exit(1);
     }
 
-    allCommands[playerId] = result;
+    allCommands.push(result);
   }
 
   // Store commands in current round
   currentRound.commands = allCommands;
 
   // Display command summary
-  const totalCommands = Object.values(allCommands).reduce(
+  const totalCommands = allCommands.reduce(
     (sum, cmds) => sum + cmds.length,
     0
   );

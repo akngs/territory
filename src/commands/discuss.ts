@@ -1,4 +1,3 @@
-import type { Declaration } from '../types.ts';
 import { getPlayerIdChar } from '../grid-utils.ts';
 import { readLines, loadGameState, saveGameState } from '../utils.ts';
 
@@ -48,7 +47,7 @@ export async function discussCommand(gameId: string): Promise<void> {
 
   // Create declarations (truncate to max length if needed)
   const maxLength = gameState.config.MAX_PLAN_LENGTH;
-  const newDeclarations: Declaration[] = [];
+  const newDeclarations: string[] = [];
   const emptyDeclarations: string[] = [];
 
   for (let i = 0; i < numPlayers; i++) {
@@ -59,11 +58,7 @@ export async function discussCommand(gameId: string): Promise<void> {
       emptyDeclarations.push(`Player ${playerId} (player ${i + 1})`);
     }
 
-    newDeclarations.push({
-      playerId,
-      text,
-      declarationNumber,
-    });
+    newDeclarations.push(text);
   }
 
   // Warn about empty declarations

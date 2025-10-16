@@ -2,6 +2,7 @@ import { readFile } from 'fs/promises';
 import { join } from 'path';
 import chalk from 'chalk';
 import type { GameState } from '../types.ts';
+import { getPlayerIdChar } from '../grid-utils.ts';
 
 /**
  * Parse grid state string and count units/resources for display
@@ -114,18 +115,21 @@ export async function showState(gameId: string): Promise<void> {
     if (round.declarations.length > 0) {
       console.log();
       console.log(`Declarations:`);
-      for (const decl of round.declarations) {
-        console.log(`- ${decl.playerId}: ${decl.text}`);
+      for (let i = 0; i < round.declarations.length; i++) {
+        const playerIndex = i % gameState.numPlayers;
+        const playerId = getPlayerIdChar(playerIndex);
+        const text = round.declarations[i];
+        console.log(`- ${playerId}: ${text}`);
       }
     }
 
     // Show commands if any
-    const playerIdsWithCommands = Object.keys(round.commands);
-    if (playerIdsWithCommands.length > 0) {
+    if (round.commands.length > 0) {
       console.log();
       console.log(`Commands:`);
-      for (const playerId of playerIdsWithCommands.sort()) {
-        const commands = round.commands[playerId];
+      for (let i = 0; i < round.commands.length; i++) {
+        const playerId = getPlayerIdChar(i);
+        const commands = round.commands[i];
         if (commands.length === 0) {
           console.log(`- ${playerId}: (no commands)`);
         } else {
@@ -141,7 +145,7 @@ export async function showState(gameId: string): Promise<void> {
   // Determine current phase
   const currentRound = gameState.rounds[gameState.rounds.length - 1];
   const expectedDeclarations = gameState.numPlayers * gameState.config.DECLARATION_COUNT;
-  const hasCommands = Object.keys(currentRound.commands).length > 0;
+  const hasCommands = currentRound.commands.length > 0;
   const hasNextRound = gameState.rounds.length > currentRound.roundNumber;
 
   let phase = '';

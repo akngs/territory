@@ -75,7 +75,7 @@ describe('End-to-End Game Flow', () => {
     gameState = JSON.parse(await fs.readFile(`${TEST_GAME_PATH}/game-state.json`, 'utf-8'));
 
     // Verify round resolved
-    expect(gameState.rounds[0].commands.a).toHaveLength(1);
+    expect(gameState.rounds[0].commands[0]).toHaveLength(1);
     expect(gameState.rounds).toHaveLength(2);
     expect(gameState.currentRound).toBe(2);
 
@@ -110,12 +110,7 @@ describe('End-to-End Game Flow', () => {
     const { serializeGrid } = await import('./grid-utils.ts');
     gameState.rounds[0].gridState = serializeGrid(grid);
     gameState.rounds[0].declarations = [
-      { playerId: 'a', text: '', declarationNumber: 1 },
-      { playerId: 'b', text: '', declarationNumber: 1 },
-      { playerId: 'c', text: '', declarationNumber: 1 },
-      { playerId: 'a', text: '', declarationNumber: 2 },
-      { playerId: 'b', text: '', declarationNumber: 2 },
-      { playerId: 'c', text: '', declarationNumber: 2 },
+      '', '', '', '', '', ''
     ];
 
     await fs.writeFile(

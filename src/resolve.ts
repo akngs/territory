@@ -25,12 +25,12 @@ interface CombatSquare {
 /**
  * Convert all commands to movement operations
  */
-function commandsToMovements(
-  commands: { [playerId: string]: Command[] }
-): Movement[] {
+function commandsToMovements(commands: Command[][]): Movement[] {
   const movements: Movement[] = [];
 
-  for (const [playerId, playerCommands] of Object.entries(commands)) {
+  for (let i = 0; i < commands.length; i++) {
+    const playerId = getPlayerIdChar(i);
+    const playerCommands = commands[i];
     for (const cmd of playerCommands) {
       movements.push({
         from: cmd.from,
@@ -259,7 +259,7 @@ export function resolveRound(gameState: GameState): GameState {
     const nextRound: RoundRecord = {
       roundNumber: currentRound.roundNumber + 1,
       declarations: [],
-      commands: {},
+      commands: [],
       gridState: serializeGrid(grid),
     };
 

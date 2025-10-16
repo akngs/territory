@@ -42,7 +42,7 @@ describe('performInitialSetup', () => {
     // Round properties
     expect(initialRound.roundNumber).toBe(1);
     expect(initialRound.declarations).toEqual([]);
-    expect(initialRound.commands).toEqual({});
+    expect(initialRound.commands).toEqual([]);
 
     // Grid state
     expect(typeof initialRound.gridState).toBe('string');
