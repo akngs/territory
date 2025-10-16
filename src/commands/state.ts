@@ -115,9 +115,16 @@ export async function showState(gameId: string): Promise<void> {
     if (playerIdsWithCommands.length > 0) {
       console.log();
       console.log(`Commands:`);
-      for (const playerId of playerIdsWithCommands) {
+      for (const playerId of playerIdsWithCommands.sort()) {
         const commands = round.commands[playerId];
-        console.log(`  [${playerId}] ${commands.length} command(s)`);
+        if (commands.length === 0) {
+          console.log(`- ${playerId}: (no commands)`);
+        } else {
+          const cmdStrings = commands.map(cmd =>
+            `${cmd.from.x},${cmd.from.y},${cmd.direction},${cmd.unitCount}`
+          ).join(' | ');
+          console.log(`- ${playerId}: ${cmdStrings}`);
+        }
       }
     }
   }
