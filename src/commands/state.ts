@@ -77,8 +77,6 @@ export async function showState(gameId: string): Promise<void> {
 
   // Display configuration
   console.log(`## Configuration`);
-  console.log(`Players: ${gameState.numPlayers}`);
-  console.log(`Map: ${gameState.config.MAP_SIZE}×${gameState.config.MAP_SIZE}`);
   console.log(`Max Rounds: ${gameState.config.MAX_ROUNDS}`);
   console.log();
 
