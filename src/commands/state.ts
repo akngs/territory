@@ -90,7 +90,9 @@ export async function showState(gameId: string): Promise<void> {
     console.log();
 
     // Render the grid
+    console.log('```');
     console.log(renderGrid(round.gridState));
+    console.log('```');
     console.log();
 
     // Parse grid summary
