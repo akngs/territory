@@ -23,7 +23,7 @@ export interface GameConfig {
 export const DEFAULT_CONFIG: GameConfig = {
   MIN_PLAYERS: 3,
   MAX_PLAYERS: 20,
-  MAP_SIZE: 10,
+  MAP_SIZE: 8,
   MAX_ROUNDS: 15,
   STARTING_UNITS: 5,
   MAX_PLAN_LENGTH: 200,
