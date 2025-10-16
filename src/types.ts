@@ -127,6 +127,7 @@ export interface GameState {
   config: GameConfig;
   numPlayers: number;
   players: Player[];
+  initialGrid: GridState;
   currentRound: number;
   rounds: RoundRecord[];
   endCondition: EndCondition;

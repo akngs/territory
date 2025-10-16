@@ -8,7 +8,8 @@
   },
   "scripts": {
     "start": "node src/cli.ts",
-    "typecheck": "tsc --noEmit"
+    "check:all": "npm run check:ts",
+    "check:ts": "tsc --noEmit"
   },
   "keywords": [
     "game",

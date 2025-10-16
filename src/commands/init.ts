@@ -2,6 +2,7 @@ import { mkdir, writeFile, access } from 'fs/promises';
 import { join } from 'path';
 import type { GameState } from '../types.ts';
 import { DEFAULT_CONFIG } from '../types.ts';
+import { performInitialSetup } from '../game-init.ts';
 
 /**
  * Initialize a new game with the given ID and number of players
@@ -45,12 +46,16 @@ export async function initGame(gameId: string, numPlayers: number): Promise<void
   await mkdir(gameDir, { recursive: true });
   console.log(`Created game directory: gamedata/${sanitizedGameId}/`);
 
+  // Perform initial setup
+  const { grid, players } = performInitialSetup(sanitizedGameId, numPlayers, DEFAULT_CONFIG);
+
   // Initialize game state
   const initialState: GameState = {
     gameId: sanitizedGameId,
     config: DEFAULT_CONFIG,
     numPlayers,
-    players: [],
+    players,
+    initialGrid: grid,
     currentRound: 0,
     rounds: [],
     endCondition: null,
@@ -61,7 +66,12 @@ export async function initGame(gameId: string, numPlayers: number): Promise<void
   console.log(`Created game state file: gamedata/${sanitizedGameId}/game-state.json`);
   console.log(`\nGame "${sanitizedGameId}" initialized successfully!`);
   console.log(`Players: ${numPlayers}`);
+  console.log(`Map: ${DEFAULT_CONFIG.MAP_SIZE}×${DEFAULT_CONFIG.MAP_SIZE}`);
+  console.log(`Resource squares: ${Math.ceil((DEFAULT_CONFIG.MAP_SIZE * DEFAULT_CONFIG.MAP_SIZE * DEFAULT_CONFIG.RESOURCE_SQUARE_PCT) / 100)}`);
+  console.log(`\nStarting positions:`);
+  for (const player of players) {
+    console.log(`  ${player.name}: (${player.startingSquare.x}, ${player.startingSquare.y}) with ${DEFAULT_CONFIG.STARTING_UNITS} units`);
+  }
   console.log(`\nNext steps:`);
-  console.log(`  1. Add ${numPlayers} players to the game`);
-  console.log(`  2. Start the first round`);
+  console.log(`  1. Start round 1 with public discussion`);
 }
