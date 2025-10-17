@@ -67,9 +67,9 @@ describe('performInitialSetup', () => {
     const { initialRound, startingPositions } = performInitialSetup(3, DEFAULT_CONFIG);
 
     // Players placed
-    expect(initialRound.gridState.includes('05a')).toBe(true);
-    expect(initialRound.gridState.includes('05b')).toBe(true);
-    expect(initialRound.gridState.includes('05c')).toBe(true);
+    expect(initialRound.gridState.includes('005a')).toBe(true);
+    expect(initialRound.gridState.includes('005b')).toBe(true);
+    expect(initialRound.gridState.includes('005c')).toBe(true);
 
     // Correct dimensions
     const gridLines = initialRound.gridState.split('\n');
@@ -81,7 +81,7 @@ describe('performInitialSetup', () => {
     // Resource squares
     const resourceCount = (initialRound.gridState.match(/\+/g) || []).length;
     const totalSquares = DEFAULT_CONFIG.MAP_SIZE * DEFAULT_CONFIG.MAP_SIZE;
-    const expectedResources = Math.ceil((totalSquares * DEFAULT_CONFIG.RESOURCE_SQUARE_PCT) / 100);
+    const expectedResources = Math.round((totalSquares * DEFAULT_CONFIG.RESOURCE_SQUARE_PCT) / 100);
     expect(resourceCount).toBe(expectedResources);
 
     // No resources on player positions
@@ -99,6 +99,6 @@ describe('performInitialSetup', () => {
 
     const gridLines = initialRound.gridState.split('\n');
     expect(gridLines.length).toBe(5);
-    expect(initialRound.gridState.includes('10a')).toBe(true);
+    expect(initialRound.gridState.includes('010a')).toBe(true);
   });
 });

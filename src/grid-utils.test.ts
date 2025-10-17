@@ -83,7 +83,7 @@ describe('markResourceSquare', () => {
 describe('serializeGrid', () => {
   it('should serialize empty grid', () => {
     const grid = createEmptyGridBuilder(2);
-    expect(serializeGrid(grid)).toBe('00..|00..\n00..|00..');
+    expect(serializeGrid(grid)).toBe('000..|000..\n000..|000..');
   });
 
   it('should serialize grid with units and resources', () => {
@@ -93,7 +93,7 @@ describe('serializeGrid', () => {
     markResourceSquare(grid, { x: 0, y: 1 });
 
     const serialized = serializeGrid(grid);
-    expect(serialized).toBe('05a.|00..\n00.+|12b.');
+    expect(serialized).toBe('005a.|000..\n000.+|012b.');
   });
 
   it('should pad unit counts and handle larger grids', () => {
@@ -105,8 +105,8 @@ describe('serializeGrid', () => {
     const serialized = serializeGrid(grid);
     const lines = serialized.split('\n');
     expect(lines.length).toBe(3);
-    expect(lines[0]).toBe('01a.|99b.|00..');
-    expect(lines[1]).toBe('00..|05c.|00..');
-    expect(lines[2]).toBe('00..|00..|00..');
+    expect(lines[0]).toBe('001a.|099b.|000..');
+    expect(lines[1]).toBe('000..|005c.|000..');
+    expect(lines[2]).toBe('000..|000..|000..');
   });
 });

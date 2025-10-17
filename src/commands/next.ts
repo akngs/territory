@@ -305,6 +305,13 @@ export async function nextCommand(gameId: string): Promise<void> {
   // Load game state
   const gameState = await loadGameState(gameId);
 
+  // Check if game is already over
+  if (gameState.winner !== undefined) {
+    throw new Error(
+      `Game "${gameId}" is already over. Use 'state ${gameId}' to view the final results.`
+    );
+  }
+
   // Get current round
   const currentRound = gameState.rounds[gameState.rounds.length - 1];
   const numPlayers = gameState.numPlayers;

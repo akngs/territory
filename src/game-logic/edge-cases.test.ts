@@ -20,22 +20,22 @@ describe('Edge Cases', () => {
     });
 
     it('should reject non-square grid', () => {
-      const malformed = '00..|00..\n00..'; // 2 squares in first row, 1 in second
+      const malformed = '000..|000..\n000..'; // 2 squares in first row, 1 in second
       expect(() => parseGrid(malformed)).toThrow('non-square grid');
     });
 
     it('should reject invalid square format (wrong length)', () => {
-      const malformed = '00..|00\n00..|00..'; // Second square in first row is too short
+      const malformed = '000..|000\n000..|000..'; // Second square in first row is too short
       expect(() => parseGrid(malformed)).toThrow('invalid format');
     });
 
     it('should reject invalid unit count (non-numeric)', () => {
-      const malformed = 'XX..|00..\n00..|00..';
+      const malformed = 'XXX..|000..\n000..|000..';
       expect(() => parseGrid(malformed)).toThrow('invalid unit count');
     });
 
     it('should reject invalid type marker', () => {
-      const malformed = '00.X|00..\n00..|00..'; // X is not + or .
+      const malformed = '000.X|000..\n000..|000..'; // X is not + or .
       expect(() => parseGrid(malformed)).toThrow('invalid type marker');
     });
   });

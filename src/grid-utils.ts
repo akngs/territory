@@ -41,10 +41,10 @@ export function getPlayerIdChar(playerIndex: number): string {
 
 /**
  * Format a single square as compact string
- * @returns Formatted string in format "NNp?" (NN=units, p=player, ?=type)
+ * @returns Formatted string in format "NNNp?" (NNN=units, p=player, ?=type)
  */
 function formatSquare(square: GridSquare): string {
-  return `${square.units.toString().padStart(2, '0')}${square.playerId}${square.isResource ? RESOURCE_MARKER : NORMAL_MARKER}`;
+  return `${square.units.toString().padStart(3, '0')}${square.playerId}${square.isResource ? RESOURCE_MARKER : NORMAL_MARKER}`;
 }
 
 /**
@@ -132,18 +132,18 @@ export function parseGrid(gridState: GridState): GridSquare[][] {
     for (let x = 0; x < mapSize; x++) {
       const square = squares[x];
 
-      if (square.length !== 4) {
+      if (square.length !== 5) {
         throw new Error(
-          `Invalid grid: square at (${x},${y}) has invalid format "${square}" (expected 4 characters)`
+          `Invalid grid: square at (${x},${y}) has invalid format "${square}" (expected 5 characters)`
         );
       }
 
-      const units = parseInt(square.slice(0, 2), 10);
-      const typeMarker = square[3];
+      const units = parseInt(square.slice(0, 3), 10);
+      const typeMarker = square[4];
 
       if (isNaN(units)) {
         throw new Error(
-          `Invalid grid: square at (${x},${y}) has invalid unit count "${square.slice(0, 2)}"`
+          `Invalid grid: square at (${x},${y}) has invalid unit count "${square.slice(0, 3)}"`
         );
       }
 
@@ -155,7 +155,7 @@ export function parseGrid(gridState: GridState): GridSquare[][] {
 
       grid[x][y] = {
         units,
-        playerId: square[2],
+        playerId: square[3],
         isResource: typeMarker === RESOURCE_MARKER,
       };
     }
@@ -170,7 +170,7 @@ export function parseGrid(gridState: GridState): GridSquare[][] {
  */
 export function getSquare(grid: GridSquare[][], coord: Coordinate): GridSquare | null {
   const { x, y } = coord;
-  return x >= 0 && x < grid.length && y >= 0 && y < grid.length ? grid[x][y] : null;
+  return x >= 0 && x < grid.length && y >= 0 && y < grid[x]?.length ? grid[x][y] : null;
 }
 
 /**

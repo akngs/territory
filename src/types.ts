@@ -45,12 +45,12 @@ export interface Coordinate {
 /**
  * Grid state in compact string format
  *
- * Format: Each square is "NNp?" where:
- * - NN = unit count (2 digits, zero-padded)
+ * Format: Each square is "NNNp?" where:
+ * - NNN = unit count (3 digits, zero-padded)
  * - p = player ID (. for neutral, a-z for players)
  * - ? = square type (+ for resource, . for normal)
  *
- * Example: "05a+|00..|03b." represents 3 squares:
+ * Example: "005a+|000..|003b." represents 3 squares:
  * - 5 units, PLAYER A, resource square
  * - 0 units, neutral, normal square
  * - 3 units, PLAYER B, normal square
@@ -75,7 +75,8 @@ export interface Command {
 
 /**
  * A single round's complete record
- * Grid state represents the state AFTER the round is resolved
+ * Grid state represents the state AT THE START of the round (BEFORE commands are executed)
+ * Round N's gridState = result of resolving round N-1
  *
  * Declarations: Array of strings, ordered by player (a, b, c, d, e) then by phase
  * Commands: Array of command arrays, commands[0] = player 'a', commands[1] = player 'b', etc.
