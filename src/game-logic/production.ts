@@ -1,6 +1,6 @@
 import type { GameConfig } from '../types.ts';
 import type { GridSquare } from '../grid-utils.ts';
-import { NEUTRAL_PLAYER_ID } from '../grid-utils.ts';
+import { NEUTRAL_PLAYER_ID, getPlayerIdChar } from '../grid-utils.ts';
 
 /**
  * Apply production to all occupied squares
@@ -17,33 +17,18 @@ import { NEUTRAL_PLAYER_ID } from '../grid-utils.ts';
  * @returns New grid with production applied
  */
 export function applyProduction(grid: GridSquare[][], config: GameConfig): GridSquare[][] {
-  const mapSize = grid.length;
-  const productionCap = config.PRODUCTION_CAP;
-  const baseProduction = config.BASE_PRODUCTION;
-  const resourceProduction = config.RESOURCE_PRODUCTION;
+  const { PRODUCTION_CAP, BASE_PRODUCTION, RESOURCE_PRODUCTION } = config;
 
-  const newGrid: GridSquare[][] = [];
-
-  for (let x = 0; x < mapSize; x++) {
-    newGrid[x] = [];
-    for (let y = 0; y < mapSize; y++) {
-      const square = grid[x][y];
-
+  return grid.map((col) =>
+    col.map((square) => {
       // Only produce on occupied squares below production cap
-      if (square.playerId !== NEUTRAL_PLAYER_ID && square.units < productionCap) {
-        const production = square.isResource ? resourceProduction : baseProduction;
-        newGrid[x][y] = {
-          ...square,
-          units: Math.min(productionCap, square.units + production),
-        };
-      } else {
-        // Neutral or at cap - no production
-        newGrid[x][y] = { ...square };
+      if (square.playerId !== NEUTRAL_PLAYER_ID && square.units < PRODUCTION_CAP) {
+        const production = square.isResource ? RESOURCE_PRODUCTION : BASE_PRODUCTION;
+        return { ...square, units: Math.min(PRODUCTION_CAP, square.units + production) };
       }
-    }
-  }
-
-  return newGrid;
+      return { ...square };
+    })
+  );
 }
 
 /**
@@ -61,7 +46,7 @@ export function calculatePlayerUnits(
 
   // Initialize all players with 0
   for (let i = 0; i < numPlayers; i++) {
-    const playerId = String.fromCharCode(97 + i); // 'a' + i
+    const playerId = getPlayerIdChar(i);
     units.set(playerId, 0);
   }
 

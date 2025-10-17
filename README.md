@@ -48,9 +48,9 @@ This creates a new game with 3 players (a, b, c) on an 8x8 grid. Each player sta
 ```
 
 You'll see the initial game board with players positioned at the edges. The grid shows:
-- `05a`: Player A with 5 units
-- `05b`: Player B with 5 units
-- `05c`: Player C with 5 units
+- `05a`: PLAYER A with 5 units
+- `05b`: PLAYER B with 5 units
+- `05c`: PLAYER C with 5 units
 - `00.`: Empty square (neutral)
 - `00.+`: Resource square (produces 2 units/turn instead of 1)
 
@@ -86,9 +86,9 @@ Multiple commands are separated by `|`.
 
 ```bash
 # Assuming:
-# - Player A is at position (0,5) with 5 units
-# - Player B is at position (9,4) with 5 units
-# - Player C is at position (5,0) with 5 units
+# - PLAYER A is at position (0,5) with 5 units
+# - PLAYER B is at position (9,4) with 5 units
+# - PLAYER C is at position (5,0) with 5 units
 
 echo "0,5,R,3
 7,4,L,3
@@ -97,9 +97,9 @@ echo "0,5,R,3
 
 This automatically resolves the round:
 1. **Movement**: All movements happen simultaneously
-   - Player A moves 3 units right from (0,5) to (1,5)
-   - Player B moves 3 units left from (9,4) to (8,4)
-   - Player C moves 3 units down from (5,0) to (5,1)
+   - PLAYER A moves 3 units right from (0,5) to (1,5)
+   - PLAYER B moves 3 units left from (9,4) to (8,4)
+   - PLAYER C moves 3 units down from (5,0) to (5,1)
 
 2. **Combat**: If multiple players move to the same square, combat occurs
    - Winner = player with most units
@@ -135,9 +135,9 @@ Repeat steps 3-6 until a player wins!
 Players can submit multiple commands in a single turn:
 
 ```bash
-# Player A: Move 2 units right, then move 3 units up from another square
-# Player B: Move 4 units left
-# Player C: No movement this turn
+# PLAYER A: Move 2 units right, then move 3 units up from another square
+# PLAYER B: Move 4 units left
+# PLAYER C: No movement this turn
 echo "0,5,R,2|0,6,U,3
 7,4,L,4
 " | ./src/cli.ts execute demo-game
@@ -145,10 +145,10 @@ echo "0,5,R,2|0,6,U,3
 
 ### Example: Combat Scenario
 
-If Player A (10 units) and Player B (5 units) both move to the same square:
-- Player A wins with 10 - 5 = 5 units remaining
-- Player B is eliminated from that square
-- Player A gains +1 production next turn (6 units total)
+If PLAYER A (10 units) and PLAYER B (5 units) both move to the same square:
+- PLAYER A wins with 10 - 5 = 5 units remaining
+- PLAYER B is eliminated from that square
+- PLAYER A gains +1 production next turn (6 units total)
 
 ### Tips
 

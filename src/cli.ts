@@ -3,9 +3,9 @@
 import { Command } from 'commander';
 import { initGame } from './commands/init.ts';
 import { showState } from './commands/state.ts';
-import { declareCommand } from './commands/declare.ts';
-import { executeCommand } from './commands/execute.ts';
+import { nextCommand } from './commands/next.ts';
 import { helpCommand } from './commands/help.ts';
+import { autoplayCommand } from './commands/autoplay.ts';
 
 /**
  * Wraps async command functions with error handling
@@ -56,18 +56,12 @@ program
   .action(wrapCommand(showState));
 
 program
-  .command('declare')
-  .description('Record player declarations from stdin')
-  .argument('<game_id>', 'Game identifier')
-  .action(wrapCommand(declareCommand));
-
-program
-  .command('execute')
+  .command('next')
   .description(
-    'Submit player movement commands from stdin (one line per player, commands separated by |)'
+    'Advance the game to the next phase (automatically handles declarations or command execution)'
   )
   .argument('<game_id>', 'Game identifier')
-  .action(wrapCommand(executeCommand));
+  .action(wrapCommand(nextCommand));
 
 program
   .command('help-game')
@@ -75,5 +69,12 @@ program
   .action(() => {
     helpCommand();
   });
+
+program
+  .command('autoplay')
+  .description('Start a new game and let Claude AI play all players automatically')
+  .argument('<game_id>', 'Unique identifier for the game')
+  .argument('<num_players>', 'Number of players (3-20)')
+  .action(wrapCommand(autoplayCommand));
 
 program.parse();

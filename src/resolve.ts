@@ -10,7 +10,7 @@ import { checkEndConditions } from './game-logic/end-conditions.ts';
  */
 export interface ResolveResult {
   gameState: GameState;
-  winner?: string;
+  winner?: string | string[];
   playerUnits?: Map<string, number>;
 }
 
@@ -58,25 +58,27 @@ export function resolveRound(gameState: GameState): ResolveResult {
   // Check end conditions
   const winner = checkEndConditions(playerUnits, currentRound.roundNumber, config.MAX_ROUNDS);
 
-  if (winner) {
-    // Game over - don't create new round, return winner info
+  // Create next round with resolved grid state
+  const nextRound: RoundRecord = {
+    roundNumber: currentRound.roundNumber + 1,
+    declarations: [],
+    commands: [],
+    gridState: serializeGrid(grid),
+  };
+
+  gameState.rounds.push(nextRound);
+  gameState.currentRound = nextRound.roundNumber;
+
+  if (winner !== undefined) {
+    // Game over (winner is a player ID string, array of player IDs, or null for draw)
+    gameState.winner = winner;
+
     return {
       gameState,
-      winner,
+      winner: winner ?? undefined, // Convert null to undefined for ResolveResult
       playerUnits,
     };
-  } else {
-    // Create next round with resolved grid state
-    const nextRound: RoundRecord = {
-      roundNumber: currentRound.roundNumber + 1,
-      declarations: [],
-      commands: [],
-      gridState: serializeGrid(grid),
-    };
-
-    gameState.rounds.push(nextRound);
-    gameState.currentRound = nextRound.roundNumber;
-
-    return { gameState };
   }
+
+  return { gameState };
 }

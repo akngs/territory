@@ -1,4 +1,4 @@
-import type { Command, RoundRecord } from '../types.ts';
+import type { Command, RoundRecord, GameState } from '../types.ts';
 import { getPlayerIdChar, parseGrid, getSquare, type GridSquare } from '../grid-utils.ts';
 import { resolveRound } from '../resolve.ts';
 import {
@@ -7,7 +7,9 @@ import {
   isValidDirection,
   loadGameState,
   saveGameState,
+  getCoordinateKey,
 } from '../utils.ts';
+import { parseAllPlayerCommands } from './autoplay.ts';
 
 /**
  * Result of parsing a command
@@ -134,6 +136,7 @@ export function parsePlayerCommands(
   }
 
   const commands: Command[] = [];
+  const unitsUsedPerSquare = new Map<string, number>();
 
   for (const cmdStr of cmdStrings) {
     const result = parseCommand(cmdStr, playerIndex);
@@ -148,6 +151,20 @@ export function parsePlayerCommands(
       return { success: false, error: `Player ${playerId}: ${validationError}` };
     }
 
+    // Check cumulative units from this source square
+    const key = getCoordinateKey(result.command.from);
+    const usedSoFar = unitsUsedPerSquare.get(key) || 0;
+    const totalUsed = usedSoFar + result.command.unitCount;
+
+    const sourceSquare = getSquare(grid, result.command.from);
+    if (sourceSquare && totalUsed > sourceSquare.units) {
+      return {
+        success: false,
+        error: `Player ${playerId}: Total units from (${result.command.from.x},${result.command.from.y}) would be ${totalUsed}, but only ${sourceSquare.units} available`,
+      };
+    }
+
+    unitsUsedPerSquare.set(key, totalUsed);
     commands.push(result.command);
   }
 
@@ -155,80 +172,96 @@ export function parsePlayerCommands(
 }
 
 /**
- * Validate that commands can be submitted for the current round
+ * Determine the current phase of the game
  */
-function validateCommandPhase(
+function determinePhase(
   currentRound: RoundRecord,
   numPlayers: number,
   declarationCount: number
-): { valid: true } | { valid: false; error: string; hint?: string } {
-  // Check if declarations are complete
-  const expectedDeclarations = numPlayers * declarationCount;
-  if (currentRound.declarations.length < expectedDeclarations) {
-    return {
-      valid: false,
-      error: `Declaration phase not complete for round ${currentRound.roundNumber}. Expected ${expectedDeclarations} declarations (${numPlayers} players × ${declarationCount} phases), but got ${currentRound.declarations.length}`,
-      hint: `Use 'declare <game_id>' to submit declarations first`,
-    };
-  }
-
+): 'declaration' | 'execution' | 'complete' {
   // Check if commands already submitted
   if (currentRound.commands.length > 0) {
-    return {
-      valid: false,
-      error: `Commands have already been submitted for round ${currentRound.roundNumber}`,
-      hint: `Round ${currentRound.roundNumber} is complete`,
-    };
+    return 'complete';
   }
 
-  return { valid: true };
+  // Check if all declarations are complete
+  const expectedDeclarations = numPlayers * declarationCount;
+  if (currentRound.declarations.length < expectedDeclarations) {
+    return 'declaration';
+  }
+
+  // All declarations complete, ready for execution
+  return 'execution';
 }
 
 /**
- * Submit commands for the current round
+ * Handle declaration phase
  */
-export async function executeCommand(gameId: string): Promise<void> {
-  // Load game state
-  const gameState = await loadGameState(gameId);
+async function handleDeclarationPhase(
+  gameId: string,
+  currentRound: RoundRecord,
+  numPlayers: number,
+  maxLength: number,
+  declarationCount: number
+): Promise<void> {
+  // Calculate which declaration number this is (1-indexed)
+  const currentDeclarationCount = currentRound.declarations.length;
+  const currentPhase = Math.floor(currentDeclarationCount / numPlayers);
+  const declarationNumber = currentPhase + 1;
 
-  // Get current round
-  const currentRound = gameState.rounds[gameState.rounds.length - 1];
-  const numPlayers = gameState.numPlayers;
-  const maxCommands = gameState.config.MAX_COMMANDS_PER_ROUND;
-  const mapSize = gameState.config.MAP_SIZE;
+  // Read n lines from stdin
+  const lines = await readLines(numPlayers);
 
-  // Validate command phase
-  const validation = validateCommandPhase(
-    currentRound,
-    numPlayers,
-    gameState.config.DECLARATION_COUNT
-  );
-  if (!validation.valid) {
-    throw new Error(
-      validation.hint ? `${validation.error}. Hint: ${validation.hint}` : validation.error
-    );
+  // Create declarations (truncate to max length if needed, sanitize newlines)
+  const newDeclarations: string[] = [];
+  const emptyDeclarations: string[] = [];
+
+  for (let i = 0; i < numPlayers; i++) {
+    const playerId = getPlayerIdChar(i);
+    // Replace newlines and other control characters with spaces
+    const sanitized = lines[i].replace(/[\r\n\t]/g, ' ');
+    const text = sanitized.slice(0, maxLength);
+
+    if (text.trim() === '') {
+      emptyDeclarations.push(`Player ${playerId} (player ${i + 1})`);
+    }
+
+    newDeclarations.push(text);
   }
 
+  // Warn about empty declarations
+  if (emptyDeclarations.length > 0) {
+    console.warn(`Warning: Empty declarations from: ${emptyDeclarations.join(', ')}`);
+  }
+
+  // Add declarations to current round
+  currentRound.declarations.push(...newDeclarations);
+
+  console.log(
+    `Declaration phase ${declarationNumber}/${declarationCount} recorded for round ${currentRound.roundNumber}`
+  );
+  console.log(`Players: ${numPlayers}, Declarations received: ${newDeclarations.length}`);
+}
+
+/**
+ * Handle execution phase
+ */
+async function handleExecutionPhase(
+  currentRound: RoundRecord,
+  numPlayers: number,
+  maxCommands: number,
+  mapSize: number,
+  gameId: string,
+  gameState: GameState
+): Promise<void> {
   // Parse the grid state
   const grid = parseGrid(currentRound.gridState);
 
   // Read n lines from stdin (one per player)
   const lines = await readLines(numPlayers);
 
-  // Parse and validate commands for each player
-  const allCommands: Command[][] = [];
-
-  for (let i = 0; i < numPlayers; i++) {
-    const playerId = getPlayerIdChar(i);
-    const playerNumber = i + 1;
-    const result = parsePlayerCommands(lines[i], i, playerId, grid, mapSize, maxCommands);
-
-    if (!result.success) {
-      throw new Error(`Player ${playerId} (#${playerNumber}): ${result.error}`);
-    }
-
-    allCommands.push(result.commands);
-  }
+  // Parse and validate commands for each player (throws on error)
+  const allCommands = parseAllPlayerCommands(lines, numPlayers, grid, mapSize, maxCommands, true);
 
   // Store commands in current round
   currentRound.commands = allCommands;
@@ -243,16 +276,59 @@ export async function executeCommand(gameId: string): Promise<void> {
   console.log(`\nResolving round ${currentRound.roundNumber}...`);
   const result = resolveRound(gameState);
 
-  // Save updated game state
-  await saveGameState(gameId, result.gameState);
+  // Update gameState reference with result
+  Object.assign(gameState, result.gameState);
 
-  if (result.winner) {
+  if (result.winner !== undefined) {
     // Game over
     console.log(`\nGame Over!`);
-    console.log(`Winner: Player ${result.winner}`);
-    const winnerUnits = result.playerUnits?.get(result.winner) || 0;
-    console.log(`Final units: ${winnerUnits}`);
+    if (gameState.winner === null) {
+      console.log(`Result: DRAW - All players eliminated (Annihilation)`);
+    } else if (Array.isArray(gameState.winner)) {
+      console.log(`Result: TIE - Multiple winners: ${gameState.winner.join(', ')}`);
+      const units = gameState.winner.map((id: string) => result.playerUnits?.get(id) || 0);
+      console.log(`Final units: ${units[0]} each`);
+    } else if (gameState.winner !== undefined) {
+      console.log(`Winner: Player ${gameState.winner}`);
+      const winnerUnits = result.playerUnits?.get(gameState.winner) || 0;
+      console.log(`Final units: ${winnerUnits}`);
+    }
   } else {
     console.log(`Round ${currentRound.roundNumber} resolved successfully`);
   }
+}
+
+/**
+ * Advance the game to the next phase (declaration or execution)
+ */
+export async function nextCommand(gameId: string): Promise<void> {
+  // Load game state
+  const gameState = await loadGameState(gameId);
+
+  // Get current round
+  const currentRound = gameState.rounds[gameState.rounds.length - 1];
+  const numPlayers = gameState.numPlayers;
+  const declarationCount = gameState.config.DECLARATION_COUNT;
+  const maxCommands = gameState.config.MAX_COMMANDS_PER_ROUND;
+  const mapSize = gameState.config.MAP_SIZE;
+  const maxPlanLength = gameState.config.MAX_PLAN_LENGTH;
+
+  // Determine what phase we're in
+  const phase = determinePhase(currentRound, numPlayers, declarationCount);
+
+  if (phase === 'complete') {
+    throw new Error(
+      `Round ${currentRound.roundNumber} is already complete. Use 'state <game_id>' to view the current state.`
+    );
+  }
+
+  if (phase === 'declaration') {
+    await handleDeclarationPhase(gameId, currentRound, numPlayers, maxPlanLength, declarationCount);
+  } else {
+    // phase === 'execution'
+    await handleExecutionPhase(currentRound, numPlayers, maxCommands, mapSize, gameId, gameState);
+  }
+
+  // Save updated game state
+  await saveGameState(gameId, gameState);
 }

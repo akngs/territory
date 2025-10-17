@@ -18,36 +18,32 @@ COMMANDS:
 
     Example: init my-game 4
 
-  declare <game_id>
-    Submit player declarations for the current round.
-    Each player submits 2 declarations (one line per player).
-    Declarations are public and can be used for strategy or diplomacy.
+  next <game_id>
+    Advance the game to the next phase.
+    Automatically detects whether to handle declarations or command execution.
+    - If in declaration phase: Submit player declarations (one line per player)
+    - If in execution phase: Submit movement commands (one line per player)
 
-    Input format: One line per player (in order: a, b, c, ...)
+    Declaration phase input format: One line per player (in order: a, b, c, ...)
     Example:
-      echo "Player A moves north\\nPlayer B defends\\nPlayer C attacks" | declare my-game
+      echo "PLAYER A moves north\\nPLAYER B defends\\nPLAYER C attacks" | next my-game
 
-  execute <game_id>
-    Execute movement commands for all players.
-    Each player can submit multiple commands separated by '|'.
-    After all commands are executed, the round is automatically resolved.
-
-    Input format: One line per player
+    Execution phase input format: One line per player
     Command format: x,y,direction,count
       - x,y: Source coordinate (0-based)
       - direction: U (up), D (down), L (left), R (right)
       - count: Number of units to move
 
     Example:
-      echo "3,4,R,5|2,3,D,3\\n1,1,U,2\\n" | execute my-game
-      (Player A: two commands, Player B: one command, Player C: no commands)
+      echo "3,4,R,5|2,3,D,3\\n1,1,U,2\\n" | next my-game
+      (PLAYER A: two commands, PLAYER B: one command, PLAYER C: no commands)
 
 GAME FLOW:
   1. Initialize game with 'init <game_id> <num_players>'
   2. For each round:
-     a. First declaration phase: 'declare <game_id>' (once)
-     b. Second declaration phase: 'declare <game_id>' (once more)
-     c. Execution phase: 'execute <game_id>'
+     a. First declaration phase: 'next <game_id>' (once)
+     b. Second declaration phase: 'next <game_id>' (once more)
+     c. Execution phase: 'next <game_id>'
      d. Round is automatically resolved
   3. Repeat step 2 until a player wins or max rounds reached
 
@@ -84,13 +80,13 @@ EXAMPLES:
   ./src/cli.ts init game1 3
 
   # First declaration phase
-  echo "I will expand east\\nI will defend\\nI will attack" | ./src/cli.ts declare game1
+  echo "I will expand east\\nI will defend\\nI will attack" | ./src/cli.ts next game1
 
   # Second declaration phase
-  echo "Moving now\\nHolding position\\nCharge!" | ./src/cli.ts declare game1
+  echo "Moving now\\nHolding position\\nCharge!" | ./src/cli.ts next game1
 
   # Execute commands (assuming players at various positions)
-  echo "4,5,R,3\\n6,2,L,2\\n7,7,U,4" | ./src/cli.ts execute game1
+  echo "4,5,R,3\\n6,2,L,2\\n7,7,U,4" | ./src/cli.ts next game1
 
 For more information, see the project README.
 `);

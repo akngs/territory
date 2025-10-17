@@ -32,7 +32,7 @@ export interface GridSquare {
 
 /**
  * Convert player index to single character ID
- * @param playerIndex Zero-based player index (0-19 for max 20 players)
+ * @param playerIndex Zero-based player index (0-4 for max 5 players)
  * @returns Single character player ID ('a' for index 0, 'b' for index 1, etc.)
  */
 export function getPlayerIdChar(playerIndex: number): string {
@@ -41,14 +41,10 @@ export function getPlayerIdChar(playerIndex: number): string {
 
 /**
  * Format a single square as compact string
- * @param square Grid square to format
  * @returns Formatted string in format "NNp?" (NN=units, p=player, ?=type)
  */
 function formatSquare(square: GridSquare): string {
-  const units = square.units.toString().padStart(2, '0');
-  const player = square.playerId;
-  const resource = square.isResource ? RESOURCE_MARKER : NORMAL_MARKER;
-  return `${units}${player}${resource}`;
+  return `${square.units.toString().padStart(2, '0')}${square.playerId}${square.isResource ? RESOURCE_MARKER : NORMAL_MARKER}`;
 }
 
 /**
@@ -99,19 +95,13 @@ export function markResourceSquare(grid: GridSquare[][], coord: Coordinate): voi
 
 /**
  * Serialize grid builder to compact string format
- * @param grid Grid to serialize
- * @returns Compact string representation
  */
 export function serializeGrid(grid: GridSquare[][]): GridState {
-  const rows: string[] = [];
   const mapSize = grid.length;
+  const rows: string[] = [];
 
   for (let y = 0; y < mapSize; y++) {
-    const squares: string[] = [];
-    for (let x = 0; x < mapSize; x++) {
-      squares.push(formatSquare(grid[x][y]));
-    }
-    rows.push(squares.join('|'));
+    rows.push(Array.from({ length: mapSize }, (_, x) => formatSquare(grid[x][y])).join('|'));
   }
 
   return rows.join('\n');
@@ -119,27 +109,16 @@ export function serializeGrid(grid: GridSquare[][]): GridState {
 
 /**
  * Parse a compact grid string into a 2D array
- * @param gridState Serialized grid state string
- * @returns Parsed 2D grid array
  * @throws {Error} If grid format is invalid
  */
 export function parseGrid(gridState: GridState): GridSquare[][] {
-  if (!gridState || gridState.trim().length === 0) {
+  if (!gridState?.trim()) {
     throw new Error('Invalid grid: empty state');
   }
 
   const rows = gridState.split('\n');
   const mapSize = rows.length;
-
-  if (mapSize === 0) {
-    throw new Error('Invalid grid: no rows found');
-  }
-
-  const grid: GridSquare[][] = [];
-
-  for (let x = 0; x < mapSize; x++) {
-    grid[x] = [];
-  }
+  const grid: GridSquare[][] = Array.from({ length: mapSize }, () => []);
 
   for (let y = 0; y < mapSize; y++) {
     const squares = rows[y].split('|');
@@ -159,10 +138,8 @@ export function parseGrid(gridState: GridState): GridSquare[][] {
         );
       }
 
-      // Format: "NNp?" where NN=units (2 digits), p=player, ?=type (+/.)
       const units = parseInt(square.slice(0, 2), 10);
-      const playerId = square[2];
-      const isResource = square[3] === RESOURCE_MARKER;
+      const typeMarker = square[3];
 
       if (isNaN(units)) {
         throw new Error(
@@ -170,16 +147,16 @@ export function parseGrid(gridState: GridState): GridSquare[][] {
         );
       }
 
-      if (square[3] !== RESOURCE_MARKER && square[3] !== NORMAL_MARKER) {
+      if (typeMarker !== RESOURCE_MARKER && typeMarker !== NORMAL_MARKER) {
         throw new Error(
-          `Invalid grid: square at (${x},${y}) has invalid type marker "${square[3]}" (expected ${RESOURCE_MARKER} or ${NORMAL_MARKER})`
+          `Invalid grid: square at (${x},${y}) has invalid type marker "${typeMarker}" (expected ${RESOURCE_MARKER} or ${NORMAL_MARKER})`
         );
       }
 
       grid[x][y] = {
         units,
-        playerId,
-        isResource,
+        playerId: square[2],
+        isResource: typeMarker === RESOURCE_MARKER,
       };
     }
   }
@@ -189,13 +166,80 @@ export function parseGrid(gridState: GridState): GridSquare[][] {
 
 /**
  * Get square at coordinate from grid
- * @param grid Grid to read from
- * @param coord Coordinate to access
  * @returns Grid square at coordinate, or null if out of bounds
  */
 export function getSquare(grid: GridSquare[][], coord: Coordinate): GridSquare | null {
-  if (coord.x < 0 || coord.x >= grid.length || coord.y < 0 || coord.y >= grid.length) {
-    return null;
+  const { x, y } = coord;
+  return x >= 0 && x < grid.length && y >= 0 && y < grid.length ? grid[x][y] : null;
+}
+
+/**
+ * Create a deep copy of a grid
+ * @param grid Grid to copy
+ * @returns New grid with copied squares
+ */
+export function copyGrid(grid: GridSquare[][]): GridSquare[][] {
+  const mapSize = grid.length;
+  const newGrid: GridSquare[][] = [];
+  for (let x = 0; x < mapSize; x++) {
+    newGrid[x] = grid[x].map((square) => ({ ...square }));
   }
-  return grid[coord.x][coord.y];
+  return newGrid;
+}
+
+/**
+ * Iterate over all grid squares
+ * @param grid Grid to iterate
+ * @param callback Function to call for each square with (square, x, y)
+ */
+export function forEachGridSquare(
+  grid: GridSquare[][],
+  callback: (square: GridSquare, x: number, y: number) => void
+): void {
+  for (let x = 0; x < grid.length; x++) {
+    for (let y = 0; y < grid[x].length; y++) {
+      callback(grid[x][y], x, y);
+    }
+  }
+}
+
+/**
+ * Map over all grid squares to create a new grid
+ * @param grid Grid to map
+ * @param callback Function to transform each square
+ * @returns New grid with transformed squares
+ */
+export function mapGridSquares(
+  grid: GridSquare[][],
+  callback: (square: GridSquare, x: number, y: number) => GridSquare
+): GridSquare[][] {
+  const result: GridSquare[][] = [];
+  for (let x = 0; x < grid.length; x++) {
+    result[x] = [];
+    for (let y = 0; y < grid[x].length; y++) {
+      result[x][y] = callback(grid[x][y], x, y);
+    }
+  }
+  return result;
+}
+
+/**
+ * Find all grid squares matching a condition
+ * @param grid Grid to search
+ * @param predicate Function to test each square
+ * @returns Array of matching squares with their coordinates
+ */
+export function findGridSquares(
+  grid: GridSquare[][],
+  predicate: (square: GridSquare, x: number, y: number) => boolean
+): Array<{ square: GridSquare; x: number; y: number }> {
+  const results = [];
+  for (let x = 0; x < grid.length; x++) {
+    for (let y = 0; y < grid[x].length; y++) {
+      if (predicate(grid[x][y], x, y)) {
+        results.push({ square: grid[x][y], x, y });
+      }
+    }
+  }
+  return results;
 }

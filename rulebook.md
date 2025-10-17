@@ -4,7 +4,7 @@
 Territory is a simultaneous-action strategy game where players compete to control an 8×8 grid by deploying units, capturing squares, and outmaneuvering opponents.
 
 ## Setup
-- **Players**: 3-20
+- **Players**: 3-5
 - **Map**: 8×8 grid (64 squares total)
 - **Starting units**: Each player begins with 5 units
 - **Starting position**: Each player gets one random square on the outer edge of the map
@@ -13,14 +13,18 @@ Territory is a simultaneous-action strategy game where players compete to contro
 
 ## How Each Round Works
 
-### Phase 1: Declarations
-**Purpose**: Communicate your strategy (or deceive your opponents!)
+### Phase 1: Declarations (The Key Phase)
+**Purpose**: Shape the game through diplomacy, deception, and psychological warfare
+
+**This is the most important phase of the game.** While declarations have no mechanical effect on unit movements or combat, they determine the social dynamics that drive player decisions. Success requires reading opponents, building trust, making credible threats, and knowing when to betray.
 
 Players submit declarations in two rounds:
-1. **First declaration**: Everyone submits a plan (up to 200 characters), then all plans are revealed at once
-2. **Second declaration**: After seeing what others said, everyone submits another plan
+1. **First declaration**: Everyone submits a plan (up to 400 characters), then all plans are revealed simultaneously
+2. **Second declaration**: After seeing what others said, everyone submits another plan based on the new information
 
-**Note**: Declarations are completely public but have no mechanical effect - use them for diplomacy, coordination, or bluffing.
+**Strategic uses**: Form alliances, negotiate territory splits, make threats, coordinate attacks, deceive opponents about your intentions, break alliances, or create chaos to benefit from the confusion.
+
+**Remember**: All game information (map, units, positions, past declarations) is public. Your declarations should focus on influencing behavior, not stating obvious facts.
 
 ### Phase 2: Execution
 **Purpose**: Move your units around the map
@@ -49,9 +53,9 @@ The game processes all commands automatically in this order:
 - All other players lose all units in that square
 - **If there's a tie for first place**: Everyone loses all units (square becomes neutral)
 
-**Example**: Player A has 10 units, Player B has 4 units, Player C has 2 units in the same square
-- Player A wins with 10 - 4 = 6 units remaining
-- Players B and C lose all units
+**Example**: PLAYER A has 10 units, PLAYER B has 4 units, PLAYER C has 2 units in the same square
+- PLAYER A wins with 10 - 4 = 6 units remaining
+- PLAYER B and PLAYER C lose all units
 
 **Step 3 - Production**: Each square with at least one unit produces more units
 - Normal squares: +1 unit
@@ -68,5 +72,5 @@ The map is revealed showing all players' positions and unit counts.
 The game ends immediately when any of these conditions is met:
 
 1. **Domination**: One player has more total units than all other players combined
-2. **Annihilation**: All players reach 0 units (tie/draw)
-3. **Timeout**: Round 15 ends (player with most units wins)
+2. **Annihilation**: All players reach 0 units (draw)
+3. **Timeout**: Round 15 ends (player with most units wins; multiple players can tie if they have equal units)

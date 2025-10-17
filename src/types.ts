@@ -21,11 +21,11 @@ export interface GameConfig {
  */
 export const DEFAULT_CONFIG: GameConfig = {
   MIN_PLAYERS: 3,
-  MAX_PLAYERS: 20,
+  MAX_PLAYERS: 5,
   MAP_SIZE: 8,
   MAX_ROUNDS: 15,
   STARTING_UNITS: 5,
-  MAX_PLAN_LENGTH: 200,
+  MAX_PLAN_LENGTH: 400,
   DECLARATION_COUNT: 2,
   MAX_COMMANDS_PER_ROUND: 3,
   RESOURCE_SQUARE_PCT: 5,
@@ -51,9 +51,9 @@ export interface Coordinate {
  * - ? = square type (+ for resource, . for normal)
  *
  * Example: "05a+|00..|03b." represents 3 squares:
- * - 5 units, player a, resource square
+ * - 5 units, PLAYER A, resource square
  * - 0 units, neutral, normal square
- * - 3 units, player b, normal square
+ * - 3 units, PLAYER B, normal square
  *
  * Rows separated by newlines, squares by |
  */
@@ -77,7 +77,7 @@ export interface Command {
  * A single round's complete record
  * Grid state represents the state AFTER the round is resolved
  *
- * Declarations: Array of strings, ordered by player (a, b, c, ...) then by phase
+ * Declarations: Array of strings, ordered by player (a, b, c, d, e) then by phase
  * Commands: Array of command arrays, commands[0] = player 'a', commands[1] = player 'b', etc.
  */
 export interface RoundRecord {
@@ -96,4 +96,5 @@ export interface GameState {
   numPlayers: number;
   currentRound: number;
   rounds: RoundRecord[];
+  winner?: string | string[] | null; // Set when game ends: player ID string, array of player IDs (tie), null for draw (annihilation), undefined for ongoing
 }

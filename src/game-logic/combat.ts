@@ -3,16 +3,6 @@ import type { Movement } from './movement.ts';
 import { NEUTRAL_PLAYER_ID } from '../grid-utils.ts';
 
 /**
- * Square state during combat resolution with forces accumulation
- */
-interface CombatSquare {
-  units: number;
-  playerId: string;
-  isResource: boolean;
-  forces: Map<string, number>; // Accumulates units from all movements
-}
-
-/**
  * Resolve combat for a single square
  */
 function resolveSquareCombat(forces: Map<string, number>): { units: number; playerId: string } {
@@ -21,27 +11,25 @@ function resolveSquareCombat(forces: Map<string, number>): { units: number; play
   }
 
   if (forces.size === 1) {
-    // Single player - no combat
-    const entry = forces.entries().next().value;
-    if (entry) {
-      const [playerId, units] = entry;
-      return { units, playerId };
-    }
-    return { units: 0, playerId: NEUTRAL_PLAYER_ID };
+    const entry = forces.entries().next().value as [string, number];
+    const [playerId, units] = entry;
+    return { units, playerId };
   }
 
   // Multiple players - combat!
+  // Sort players by unit count in descending order (highest first)
   const sorted = Array.from(forces.entries()).sort((a, b) => b[1] - a[1]);
-  const [firstPlayer, firstUnits] = sorted[0];
-  const [, secondUnits] = sorted[1];
-  const remainingUnits = firstUnits - secondUnits;
 
-  if (remainingUnits > 0) {
-    return { units: remainingUnits, playerId: firstPlayer };
-  }
+  // Combat formula: Winner keeps (their units - runner-up's units)
+  // Example: If Player A has 10 units and Player B has 7 units,
+  // Player A wins with 10 - 7 = 3 remaining units
+  const remainingUnits = sorted[0][1] - sorted[1][1];
 
-  // Tie - square becomes neutral
-  return { units: 0, playerId: NEUTRAL_PLAYER_ID };
+  // If remaining units > 0, the player with most units wins
+  // If remaining units = 0 (tie), the square becomes neutral with 0 units
+  return remainingUnits > 0
+    ? { units: remainingUnits, playerId: sorted[0][0] }
+    : { units: 0, playerId: NEUTRAL_PLAYER_ID };
 }
 
 /**
@@ -58,36 +46,28 @@ function resolveSquareCombat(forces: Map<string, number>): { units: number; play
  * @returns New grid with combat resolved
  */
 export function resolveCombat(grid: GridSquare[][], movements: Movement[]): GridSquare[][] {
-  const mapSize = grid.length;
-
-  // Create combat grid with forces map for each square
-  const combatGrid: CombatSquare[][] = grid.map((col) =>
+  // Build forces map for each square
+  const forcesGrid: Map<string, number>[][] = grid.map((col) =>
     col.map((square) => {
       const forces = new Map<string, number>();
       if (square.playerId !== NEUTRAL_PLAYER_ID) {
         forces.set(square.playerId, square.units);
       }
-      return { ...square, forces };
+      return forces;
     })
   );
 
-  // Apply all movements - add to destination squares
+  // Add movements to destination squares
   for (const move of movements) {
-    const dest = combatGrid[move.to.x][move.to.y];
-    const currentForce = dest.forces.get(move.playerId) || 0;
-    dest.forces.set(move.playerId, currentForce + move.units);
+    const forces = forcesGrid[move.to.x][move.to.y];
+    forces.set(move.playerId, (forces.get(move.playerId) || 0) + move.units);
   }
 
-  // Resolve combat and convert back to regular grid
-  const newGrid: GridSquare[][] = [];
-  for (let x = 0; x < mapSize; x++) {
-    newGrid[x] = [];
-    for (let y = 0; y < mapSize; y++) {
-      const combatSquare = combatGrid[x][y];
-      const { units, playerId } = resolveSquareCombat(combatSquare.forces);
-      newGrid[x][y] = { units, playerId, isResource: combatSquare.isResource };
-    }
-  }
-
-  return newGrid;
+  // Resolve combat for all squares
+  return grid.map((col, x) =>
+    col.map((square, y) => {
+      const { units, playerId } = resolveSquareCombat(forcesGrid[x][y]);
+      return { units, playerId, isResource: square.isResource };
+    })
+  );
 }

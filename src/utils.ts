@@ -89,3 +89,41 @@ export async function saveGameState(gameId: string, gameState: GameState): Promi
 export function isValidDirection(dir: string): dir is Direction {
   return dir === 'U' || dir === 'D' || dir === 'L' || dir === 'R';
 }
+
+/**
+ * Get the opposite direction
+ */
+export function getOppositeDirection(direction: Direction): Direction {
+  switch (direction) {
+    case 'U':
+      return 'D';
+    case 'D':
+      return 'U';
+    case 'L':
+      return 'R';
+    case 'R':
+      return 'L';
+  }
+}
+
+/**
+ * Check if two coordinates are equal
+ */
+export function coordinatesEqual(c1: Coordinate, c2: Coordinate): boolean {
+  return c1.x === c2.x && c1.y === c2.y;
+}
+
+/**
+ * Get a string key for a coordinate (for use in Map/Set)
+ */
+export function getCoordinateKey(coord: Coordinate): string {
+  return `${coord.x},${coord.y}`;
+}
+
+/**
+ * Parse a coordinate from a coordinate key string
+ */
+export function parseCoordinateKey(key: string): Coordinate {
+  const [x, y] = key.split(',').map(Number);
+  return { x, y };
+}

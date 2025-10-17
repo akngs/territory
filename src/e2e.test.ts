@@ -50,8 +50,8 @@ describe('End-to-End Game Flow', () => {
     expect(playerCUnits).toBe(5);
 
     // Declarations
-    await execPromise(`echo "War!\\nDefend!\\nWatch!\\n" | ${CLI_PATH} declare ${TEST_GAME_ID}`);
-    await execPromise(`echo "Attack!\\nHold!\\nWait!\\n" | ${CLI_PATH} declare ${TEST_GAME_ID}`);
+    await execPromise(`echo "War!\\nDefend!\\nWatch!\\n" | ${CLI_PATH} next ${TEST_GAME_ID}`);
+    await execPromise(`echo "Attack!\\nHold!\\nWait!\\n" | ${CLI_PATH} next ${TEST_GAME_ID}`);
 
     gameState = JSON.parse(await fs.readFile(`${TEST_GAME_PATH}/game-state.json`, 'utf-8'));
     expect(gameState.rounds[0].declarations).toHaveLength(6);
@@ -70,7 +70,7 @@ describe('End-to-End Game Flow', () => {
     // Submit commands
     const direction = playerAPos!.x === 0 ? 'R' : playerAPos!.x === 7 ? 'L' : 'R';
     const cmdInput = `${playerAPos!.x},${playerAPos!.y},${direction},2\\n\\n\\n`;
-    await execPromise(`echo "${cmdInput}" | ${CLI_PATH} execute ${TEST_GAME_ID}`);
+    await execPromise(`echo "${cmdInput}" | ${CLI_PATH} next ${TEST_GAME_ID}`);
 
     gameState = JSON.parse(await fs.readFile(`${TEST_GAME_PATH}/game-state.json`, 'utf-8'));
 
@@ -88,7 +88,7 @@ describe('End-to-End Game Flow', () => {
     const sourceSquare = round1Grid[playerAPos!.x][playerAPos!.y];
     expect(sourceSquare.units).toBe(4); // 5 - 2 + 1 production
 
-    // Verify player B still has units (exact count depends on if they're on a resource square)
+    // Verify PLAYER B still has units (exact count depends on if they're on a resource square)
     const playerBSquare = round1Grid[playerBPos!.x][playerBPos!.y];
     expect(playerBSquare.playerId).toBe('b');
     expect(playerBSquare.units).toBeGreaterThanOrEqual(4); // At least 5 - 2 + 1 if affected by nearby movement
@@ -122,27 +122,34 @@ describe('End-to-End Game Flow', () => {
     await fs.writeFile(`${TEST_GAME_PATH}/game-state.json`, JSON.stringify(gameState, null, 2));
 
     // Submit no-op commands
-    await execPromise(`echo "\\n\\n\\n" | ${CLI_PATH} execute ${TEST_GAME_ID}`);
+    await execPromise(`echo "\\n\\n\\n" | ${CLI_PATH} next ${TEST_GAME_ID}`);
 
     gameState = JSON.parse(await fs.readFile(`${TEST_GAME_PATH}/game-state.json`, 'utf-8'));
 
-    // Game should end (no new round created)
-    expect(gameState.rounds).toHaveLength(1);
-    expect(gameState.currentRound).toBe(1);
+    // Game should end with final round showing resolved state
+    expect(gameState.rounds).toHaveLength(2);
+    expect(gameState.currentRound).toBe(2);
+    expect(gameState.winner).toBe('a');
 
-    // Round 0 shows state BEFORE final resolution
-    // Player A starts with 20 units and wins by domination
-    // Note: Grid shows state BEFORE production is applied
-    const resolvedGrid = parseGrid(gameState.rounds[0].gridState);
-    let finalAUnits = 0;
-
+    // Round 0 shows state BEFORE resolution
+    const round0Grid = parseGrid(gameState.rounds[0].gridState);
+    let round0AUnits = 0;
     for (let x = 0; x < 8; x++) {
       for (let y = 0; y < 8; y++) {
-        if (resolvedGrid[x][y].playerId === 'a') finalAUnits += resolvedGrid[x][y].units;
+        if (round0Grid[x][y].playerId === 'a') round0AUnits += round0Grid[x][y].units;
       }
     }
+    expect(round0AUnits).toBe(20); // Before production
 
-    expect(finalAUnits).toBe(20); // Before production
+    // Round 1 shows state AFTER resolution (with production applied)
+    const round1Grid = parseGrid(gameState.rounds[1].gridState);
+    let finalAUnits = 0;
+    for (let x = 0; x < 8; x++) {
+      for (let y = 0; y < 8; y++) {
+        if (round1Grid[x][y].playerId === 'a') finalAUnits += round1Grid[x][y].units;
+      }
+    }
+    expect(finalAUnits).toBe(21); // After production: 20 + 1
   });
 
   it('should handle multiple rounds of gameplay', async () => {
@@ -151,10 +158,10 @@ describe('End-to-End Game Flow', () => {
     // Play through 2 rounds (smaller grid means faster domination)
     for (let round = 1; round <= 2; round++) {
       await execPromise(
-        `echo "R${round}-A\\nR${round}-B\\nR${round}-C\\n" | ${CLI_PATH} declare ${TEST_GAME_ID}`
+        `echo "R${round}-A\\nR${round}-B\\nR${round}-C\\n" | ${CLI_PATH} next ${TEST_GAME_ID}`
       );
-      await execPromise(`echo "Go!\\nGo!\\nGo!\\n" | ${CLI_PATH} declare ${TEST_GAME_ID}`);
-      await execPromise(`echo "\\n\\n\\n" | ${CLI_PATH} execute ${TEST_GAME_ID}`);
+      await execPromise(`echo "Go!\\nGo!\\nGo!\\n" | ${CLI_PATH} next ${TEST_GAME_ID}`);
+      await execPromise(`echo "\\n\\n\\n" | ${CLI_PATH} next ${TEST_GAME_ID}`);
     }
 
     const gameState: GameState = JSON.parse(

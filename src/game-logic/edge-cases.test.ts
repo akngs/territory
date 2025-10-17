@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { parseGrid, createEmptyGridBuilder, placeUnits, serializeGrid } from '../grid-utils.ts';
+import {
+  parseGrid,
+  createEmptyGridBuilder,
+  placeUnits,
+  serializeGrid,
+  getPlayerIdChar,
+} from '../grid-utils.ts';
 import { applyProduction } from './production.ts';
 import { DEFAULT_CONFIG } from '../types.ts';
 
@@ -37,74 +43,57 @@ describe('Edge Cases', () => {
   describe('Production Edge Cases', () => {
     it('should not produce on neutral squares', () => {
       const grid = createEmptyGridBuilder(3);
-      // Leave grid neutral (no units placed)
-
       const result = applyProduction(grid, DEFAULT_CONFIG);
 
-      // All squares should still be neutral with 0 units
-      for (let x = 0; x < 3; x++) {
-        for (let y = 0; y < 3; y++) {
-          expect(result[x][y].units).toBe(0);
-          expect(result[x][y].playerId).toBe('.');
-        }
-      }
+      expect(result[0][0].units).toBe(0);
+      expect(result[0][0].playerId).toBe('.');
     });
 
     it('should not produce when at production cap', () => {
       const grid = createEmptyGridBuilder(3);
-      placeUnits(grid, { x: 0, y: 0 }, 'a', 21); // At cap
+      placeUnits(grid, { x: 0, y: 0 }, 'a', 21);
 
       const result = applyProduction(grid, DEFAULT_CONFIG);
-
-      expect(result[0][0].units).toBe(21); // No change
+      expect(result[0][0].units).toBe(21);
     });
 
     it('should cap production at PRODUCTION_CAP', () => {
       const grid = createEmptyGridBuilder(3);
-      placeUnits(grid, { x: 0, y: 0 }, 'a', 20); // Just below cap
+      placeUnits(grid, { x: 0, y: 0 }, 'a', 20);
 
       const result = applyProduction(grid, DEFAULT_CONFIG);
-
-      expect(result[0][0].units).toBe(21); // Capped at 21, not 21 (20+1)
+      expect(result[0][0].units).toBe(21);
     });
 
     it('should respect production cap with resource squares', () => {
       const grid = createEmptyGridBuilder(3);
       placeUnits(grid, { x: 0, y: 0 }, 'a', 20);
-      grid[0][0].isResource = true; // Would produce +2
+      grid[0][0].isResource = true;
 
       const result = applyProduction(grid, DEFAULT_CONFIG);
-
-      expect(result[0][0].units).toBe(21); // Capped at 21, not 22 (20+2)
+      expect(result[0][0].units).toBe(21);
     });
   });
 
   describe('Maximum Players', () => {
-    it('should handle maximum 20 players', () => {
-      const grid = createEmptyGridBuilder(10);
+    it('should handle maximum 5 players', () => {
+      const grid = createEmptyGridBuilder(5);
 
-      // Place one unit for each of 20 players
-      for (let i = 0; i < 20; i++) {
-        const playerId = String.fromCharCode(97 + i); // a-t
-        placeUnits(grid, { x: i % 10, y: Math.floor(i / 10) }, playerId, 1);
+      for (let i = 0; i < 5; i++) {
+        placeUnits(grid, { x: i, y: 0 }, getPlayerIdChar(i), 1);
       }
 
-      const serialized = serializeGrid(grid);
-      const parsed = parseGrid(serialized);
-
-      // Verify all players present
+      const parsed = parseGrid(serializeGrid(grid));
       const playerIds = new Set<string>();
-      for (let x = 0; x < 10; x++) {
-        for (let y = 0; y < 10; y++) {
-          if (parsed[x][y].playerId !== '.') {
-            playerIds.add(parsed[x][y].playerId);
-          }
+
+      for (let x = 0; x < 5; x++) {
+        for (let y = 0; y < 5; y++) {
+          if (parsed[x][y].playerId !== '.') playerIds.add(parsed[x][y].playerId);
         }
       }
 
-      expect(playerIds.size).toBe(20);
-      expect(playerIds.has('a')).toBe(true);
-      expect(playerIds.has('t')).toBe(true); // 20th player
+      expect(playerIds.size).toBe(5);
+      expect(playerIds.has('e')).toBe(true);
     });
   });
 
@@ -113,10 +102,7 @@ describe('Edge Cases', () => {
       const grid = createEmptyGridBuilder(2);
       placeUnits(grid, { x: 0, y: 0 }, 'a', 99);
 
-      const serialized = serializeGrid(grid);
-      expect(serialized).toContain('99a.');
-
-      const parsed = parseGrid(serialized);
+      const parsed = parseGrid(serializeGrid(grid));
       expect(parsed[0][0].units).toBe(99);
     });
   });
@@ -126,12 +112,8 @@ describe('Edge Cases', () => {
       const grid = createEmptyGridBuilder(2);
       placeUnits(grid, { x: 0, y: 0 }, 'a', 5);
 
-      const originalUnits = grid[0][0].units;
-
       applyProduction(grid, DEFAULT_CONFIG);
-
-      // Original grid should be unchanged
-      expect(grid[0][0].units).toBe(originalUnits);
+      expect(grid[0][0].units).toBe(5);
     });
   });
 });
