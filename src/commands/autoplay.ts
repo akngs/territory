@@ -165,6 +165,7 @@ async function processDeclarationPhase(
     gameId,
     numPlayers,
     'declare',
+    undefined,
     declarationPhase
   );
 
