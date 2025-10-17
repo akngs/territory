@@ -138,8 +138,8 @@ async function getConcurrentPlayerResponses(
     const playerId = getPlayerIdChar(i);
     const units = playerUnits?.get(playerId) || 0;
 
-    // Skip calling Claude if player has 0 units (only in execute phase)
-    if (phase === 'execute' && playerUnits && units === 0) {
+    // Skip calling Claude if player has 0 units (in both phases)
+    if (playerUnits && units === 0) {
       console.log(`[Player ${playerId}] Eliminated (0 units) - skipping`);
       promises.push(Promise.resolve(''));
     } else {
@@ -148,6 +148,17 @@ async function getConcurrentPlayerResponses(
   }
 
   return Promise.all(promises);
+}
+
+/**
+ * Load game state and calculate player units
+ */
+async function loadGameStateWithPlayerUnits(gameId: string, numPlayers: number) {
+  const gameState = await loadGameState(gameId);
+  const currentRound = gameState.rounds[gameState.rounds.length - 1];
+  const grid = parseGrid(currentRound.gridState);
+  const playerUnits = calculatePlayerUnits(grid, numPlayers);
+  return { gameState, currentRound, grid, playerUnits };
 }
 
 /**
@@ -160,18 +171,20 @@ async function processDeclarationPhase(
 ): Promise<void> {
   console.log(`\n=== Declaration Phase ${declarationPhase} ===`);
 
-  // Get concurrent responses from all players
+  // Load game state to calculate player units
+  const { gameState, currentRound, playerUnits } = await loadGameStateWithPlayerUnits(
+    gameId,
+    numPlayers
+  );
+
+  // Get concurrent responses from all players (skip eliminated)
   const responses = await getConcurrentPlayerResponses(
     gameId,
     numPlayers,
     'declare',
-    undefined,
+    playerUnits,
     declarationPhase
   );
-
-  // Load game state
-  const gameState = await loadGameState(gameId);
-  const currentRound = gameState.rounds[gameState.rounds.length - 1];
 
   // Add declarations to current round (truncate to max length)
   const maxLength = gameState.config.MAX_PLAN_LENGTH;
@@ -314,13 +327,11 @@ export function parseAllPlayerCommands(
 async function processExecutionPhase(gameId: string, numPlayers: number): Promise<boolean> {
   console.log(`\n=== Execution Phase ===`);
 
-  // Load game state
-  const gameState = await loadGameState(gameId);
-  const currentRound = gameState.rounds[gameState.rounds.length - 1];
-  const grid = parseGrid(currentRound.gridState);
-
-  // Calculate units for each player
-  const playerUnits = calculatePlayerUnits(grid, numPlayers);
+  // Load game state and calculate player units
+  const { gameState, currentRound, grid, playerUnits } = await loadGameStateWithPlayerUnits(
+    gameId,
+    numPlayers
+  );
 
   // Get concurrent responses from all players
   const responses = await getConcurrentPlayerResponses(gameId, numPlayers, 'execute', playerUnits);

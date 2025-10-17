@@ -11,6 +11,7 @@ import { NEUTRAL_PLAYER_ID, getPlayerIdChar } from '../grid-utils.ts';
  * - Normal squares: +BASE_PRODUCTION units per round
  * - Resource squares: +RESOURCE_PRODUCTION units per round
  * - No production if square has >= PRODUCTION_CAP units
+ * - Production can increase units above PRODUCTION_CAP (e.g., 20 + 2 = 22)
  *
  * @param grid Current grid state
  * @param config Game configuration
@@ -24,7 +25,7 @@ export function applyProduction(grid: GridSquare[][], config: GameConfig): GridS
       // Only produce on occupied squares below production cap
       if (square.playerId !== NEUTRAL_PLAYER_ID && square.units < PRODUCTION_CAP) {
         const production = square.isResource ? RESOURCE_PRODUCTION : BASE_PRODUCTION;
-        return { ...square, units: Math.min(PRODUCTION_CAP, square.units + production) };
+        return { ...square, units: square.units + production };
       }
       return { ...square };
     })

@@ -20,7 +20,10 @@ type ParseCommandResult = { success: true; command: Command } | { success: false
  * Parse a single command string (format: "x,y,direction,count")
  */
 export function parseCommand(cmdStr: string, _playerIndex: number): ParseCommandResult {
-  const parts = cmdStr.trim().split(',');
+  const parts = cmdStr
+    .trim()
+    .split(',')
+    .map((part) => part.trim());
 
   if (parts.length !== 4) {
     return {

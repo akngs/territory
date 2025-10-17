@@ -20,9 +20,9 @@ function parseGridSummary(gridState: string): {
     const squares = row.split('|');
     for (const square of squares) {
       totalSquares++;
-      const units = parseInt(square.substring(0, 2), 10);
-      const playerId = square[2];
-      const isResource = square[3] === '+';
+      const units = parseInt(square.substring(0, 3), 10);
+      const playerId = square[3];
+      const isResource = square[4] === '+';
 
       if (playerId !== '.') {
         playerUnits.set(playerId, (playerUnits.get(playerId) || 0) + units);
@@ -72,29 +72,34 @@ function renderGrid(gridState: string): string {
   for (let i = 0; i < rows.length; i++) {
     const squares = rows[i].split('|');
     const displaySquares = squares.map((sq) => {
-      // Format: "NNp?" where ? is '+' for resource or '.' for normal
-      const playerId = sq[2];
-      const isResource = sq[3] === '+';
+      // Storage format: "NNNpR" where NNN=units (3 digits), p=player, R=resource marker
+      // Display format: "nnPR" where nn=units (2 digits), P=player, R=resource marker
+      const units = parseInt(sq.substring(0, 3), 10);
+      const playerId = sq[3];
+      const resourceMarker = sq[4];
+      const isResource = resourceMarker === '+';
       const isNeutral = playerId === '.';
 
-      // Split square into first 3 chars and last char
-      const firstThree = sq.substring(0, 3);
-      const lastChar = sq[3];
+      // Convert to 2-digit display (cap at 99)
+      // NOTE: This is intentional for visual formatting. Grid can store up to 999 units,
+      // but we display max 99 to maintain compact 4-character display format (nnP+).
+      // Players can see actual counts in the unit summary below the grid.
+      const displayUnits = Math.min(99, units).toString().padStart(2, '0');
+
+      // Build "nnP" part (2-digit units + player ID)
+      const nnP = displayUnits + playerId;
 
       if (isNeutral) {
-        // Neutral squares: gray for first 3 chars, green for resource marker
-        const coloredFirstThree = chalk.gray(firstThree);
-        const coloredLastChar = isResource ? chalk.green(lastChar) : chalk.gray(lastChar);
-        return coloredFirstThree + coloredLastChar;
+        // Neutral squares: gray for "nnP", green for resource marker "+"
+        const coloredNnP = chalk.gray(nnP);
+        const coloredR = isResource ? chalk.green(resourceMarker) : chalk.gray(resourceMarker);
+        return coloredNnP + coloredR;
       } else {
-        // Player squares: apply player's background color with black text to first 3 chars
+        // Player squares: player color for "nnP", green for resource marker "+"
         const playerBg = getPlayerBgColor(playerId);
-        const coloredFirstThree = playerBg.black(firstThree);
-
-        // Apply green color (no background) to resource marker
-        const coloredLastChar = isResource ? chalk.green(lastChar) : chalk.gray(lastChar);
-
-        return coloredFirstThree + coloredLastChar;
+        const coloredNnP = playerBg.black(nnP);
+        const coloredR = isResource ? chalk.green(resourceMarker) : chalk.gray(resourceMarker);
+        return coloredNnP + coloredR;
       }
     });
     // Add y-axis label (row number) on the left
@@ -315,21 +320,9 @@ function generateExecutionInstructions(roundNumber: number, maxCommands: number)
 function generatePhaseInstructions(gameState: GameState): string {
   const currentRound = gameState.rounds[gameState.rounds.length - 1];
   const expectedDeclarations = gameState.numPlayers * gameState.config.DECLARATION_COUNT;
-  const hasCommands = currentRound.commands.length > 0;
-  const hasNextRound = gameState.rounds.length > currentRound.roundNumber;
 
-  // Game over - next round already started
-  if (hasCommands && hasNextRound) {
-    return generateDeclarationInstructions(
-      gameState.currentRound,
-      1,
-      gameState.config.DECLARATION_COUNT,
-      gameState.config.MAX_PLAN_LENGTH
-    );
-  }
-
-  // Game over - no more rounds
-  if (hasCommands && !hasNextRound) {
+  // Check if game is over
+  if (gameState.winner !== undefined) {
     return generateGameOverMessage(gameState, currentRound, gameState.config.MAX_ROUNDS);
   }
 

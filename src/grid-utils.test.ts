@@ -109,4 +109,19 @@ describe('serializeGrid', () => {
     expect(lines[1]).toBe('000..|005c.|000..');
     expect(lines[2]).toBe('000..|000..|000..');
   });
+
+  it('should throw error when units exceed 999', () => {
+    const grid = createEmptyGridBuilder(2);
+    placeUnits(grid, { x: 0, y: 0 }, 'a', 1500);
+
+    expect(() => serializeGrid(grid)).toThrow('unit count 1500 exceeds maximum of 999');
+  });
+
+  it('should serialize 999 units without error', () => {
+    const grid = createEmptyGridBuilder(2);
+    placeUnits(grid, { x: 0, y: 0 }, 'a', 999);
+
+    const serialized = serializeGrid(grid);
+    expect(serialized).toBe('999a.|000..\n000..|000..');
+  });
 });

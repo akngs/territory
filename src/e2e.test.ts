@@ -126,9 +126,9 @@ describe('End-to-End Game Flow', () => {
 
     gameState = JSON.parse(await fs.readFile(`${TEST_GAME_PATH}/game-state.json`, 'utf-8'));
 
-    // Game should end with final round showing resolved state
-    expect(gameState.rounds).toHaveLength(2);
-    expect(gameState.currentRound).toBe(2);
+    // Game should end without creating a new round (bug fix: don't create round when game ends)
+    expect(gameState.rounds).toHaveLength(1);
+    expect(gameState.currentRound).toBe(1);
     expect(gameState.winner).toBe('a');
 
     // Round 0 shows state BEFORE resolution
@@ -140,16 +140,6 @@ describe('End-to-End Game Flow', () => {
       }
     }
     expect(round0AUnits).toBe(20); // Before production
-
-    // Round 1 shows state AFTER resolution (with production applied)
-    const round1Grid = parseGrid(gameState.rounds[1].gridState);
-    let finalAUnits = 0;
-    for (let x = 0; x < 8; x++) {
-      for (let y = 0; y < 8; y++) {
-        if (round1Grid[x][y].playerId === 'a') finalAUnits += round1Grid[x][y].units;
-      }
-    }
-    expect(finalAUnits).toBe(21); // After production: 20 + 1
   });
 
   it('should handle multiple rounds of gameplay', async () => {

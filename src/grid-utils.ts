@@ -42,8 +42,15 @@ export function getPlayerIdChar(playerIndex: number): string {
 /**
  * Format a single square as compact string
  * @returns Formatted string in format "NNNp?" (NNN=units, p=player, ?=type)
+ * @throws {Error} If units exceed 999 (format limitation)
  */
 function formatSquare(square: GridSquare): string {
+  // Grid format supports up to 999 units (3-digit format)
+  if (square.units > 999) {
+    throw new Error(
+      `Cannot serialize square: unit count ${square.units} exceeds maximum of 999 (3-digit format limitation)`
+    );
+  }
   return `${square.units.toString().padStart(3, '0')}${square.playerId}${square.isResource ? RESOURCE_MARKER : NORMAL_MARKER}`;
 }
 

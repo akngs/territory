@@ -20,6 +20,22 @@ describe('parseCommand', () => {
     });
   });
 
+  it('should parse commands with spaces after commas', () => {
+    const r1 = parseCommand('0, 0, R, 2', 0);
+    expect(r1.success && r1.command).toEqual({
+      from: { x: 0, y: 0 },
+      direction: 'R',
+      unitCount: 2,
+    });
+
+    const r2 = parseCommand('  3,  4,  L,  5  ', 0); // extra spaces
+    expect(r2.success && r2.command).toEqual({
+      from: { x: 3, y: 4 },
+      direction: 'L',
+      unitCount: 5,
+    });
+  });
+
   it('should return errors for invalid inputs', () => {
     expect(parseCommand('0,0,R', 0).success).toBe(false); // missing field
     expect(parseCommand('0,0,X,2', 0).success).toBe(false); // bad direction

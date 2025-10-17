@@ -81,7 +81,7 @@ describe('performInitialSetup', () => {
     // Resource squares
     const resourceCount = (initialRound.gridState.match(/\+/g) || []).length;
     const totalSquares = DEFAULT_CONFIG.MAP_SIZE * DEFAULT_CONFIG.MAP_SIZE;
-    const expectedResources = Math.round((totalSquares * DEFAULT_CONFIG.RESOURCE_SQUARE_PCT) / 100);
+    const expectedResources = Math.ceil((totalSquares * DEFAULT_CONFIG.RESOURCE_SQUARE_PCT) / 100);
     expect(resourceCount).toBe(expectedResources);
 
     // No resources on player positions
@@ -100,5 +100,24 @@ describe('performInitialSetup', () => {
     const gridLines = initialRound.gridState.split('\n');
     expect(gridLines.length).toBe(5);
     expect(initialRound.gridState.includes('010a')).toBe(true);
+  });
+
+  describe('Regression: Resource percentage should meet configured target', () => {
+    it('should always meet or exceed configured resource percentage', () => {
+      // With 8x8 grid (64 squares) and 5%, we get:
+      // Math.round(64 * 0.05) = 3 (4.6875% - WRONG)
+      // Math.ceil(64 * 0.05) = 4 (6.25% - CORRECT)
+      const { initialRound } = performInitialSetup(3, DEFAULT_CONFIG);
+      const resourceCount = (initialRound.gridState.match(/\+/g) || []).length;
+      const totalSquares = DEFAULT_CONFIG.MAP_SIZE * DEFAULT_CONFIG.MAP_SIZE;
+
+      // Should use Math.ceil to ensure minimum target is met
+      const minExpected = Math.ceil((totalSquares * DEFAULT_CONFIG.RESOURCE_SQUARE_PCT) / 100);
+      expect(resourceCount).toBe(minExpected);
+
+      // Verify actual percentage meets or exceeds target
+      const actualPercent = (resourceCount / totalSquares) * 100;
+      expect(actualPercent).toBeGreaterThanOrEqual(DEFAULT_CONFIG.RESOURCE_SQUARE_PCT);
+    });
   });
 });

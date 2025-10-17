@@ -72,8 +72,8 @@ describe('resolveRound', () => {
 
   it('should handle tie in combat (square becomes neutral)', () => {
     const grid = createEmptyGridBuilder(5);
-    placeUnits(grid, { x: 0, y: 0 }, 'a', 5);
-    placeUnits(grid, { x: 2, y: 0 }, 'b', 5);
+    placeUnits(grid, { x: 0, y: 0 }, 'a', 10);
+    placeUnits(grid, { x: 2, y: 0 }, 'b', 10);
 
     const result = resolve(
       grid,
@@ -107,13 +107,13 @@ describe('resolveRound', () => {
     expect(result[0][0].units).toBe(9);
   });
 
-  it('should respect production cap', () => {
+  it('should respect production cap threshold', () => {
     const grid = createEmptyGridBuilder(5);
     placeUnits(grid, { x: 0, y: 0 }, 'a', 20);
     placeUnits(grid, { x: 4, y: 4 }, 'b', 20);
 
     const result = resolve(grid, [[], []], 2);
-    expect(result[0][0].units).toBe(21);
+    expect(result[0][0].units).toBe(21); // 20 + 1 = 21
   });
 
   it('should create new round after resolution', () => {
@@ -169,5 +169,57 @@ describe('resolveRound', () => {
 
     expect(result[1][1].units).toBe(4); // 10 - 7 = 3, then +1 production
     expect(result[1][1].playerId).toBe('a');
+  });
+
+  describe('Regression: Game end should not create new round', () => {
+    it('should not create new round when player wins by domination', () => {
+      const grid = createEmptyGridBuilder(3);
+      placeUnits(grid, { x: 0, y: 0 }, 'a', 20);
+      placeUnits(grid, { x: 1, y: 0 }, 'b', 5);
+
+      const gameState = createGame(grid, [[], []], 2);
+      const result = resolveRound(gameState);
+
+      // Player 'a' wins by domination (20+1=21 > 50% of 26)
+      expect(result.winner).toBe('a');
+      // Should have only 1 round (the initial round), no new round created
+      expect(result.gameState.rounds.length).toBe(1);
+    });
+
+    it('should not create new round when all players eliminated (annihilation)', () => {
+      const grid = createEmptyGridBuilder(3);
+      placeUnits(grid, { x: 0, y: 0 }, 'a', 5);
+      placeUnits(grid, { x: 2, y: 0 }, 'b', 5);
+
+      const gameState = createGame(
+        grid,
+        [
+          [{ from: { x: 0, y: 0 }, direction: 'R', unitCount: 5 }],
+          [{ from: { x: 2, y: 0 }, direction: 'L', unitCount: 5 }],
+        ],
+        2
+      );
+      const result = resolveRound(gameState);
+
+      // Both players move all units to same square, tie in combat, all destroyed
+      // However, winner is returned in ResolveResult, which converts null to undefined
+      expect(result.winner).toBeUndefined(); // null is converted to undefined in ResolveResult
+      expect(result.gameState.winner).toBeNull(); // The actual game state has null
+      expect(result.gameState.rounds.length).toBe(1);
+    });
+
+    it('should not create new round when max rounds reached (timeout)', () => {
+      const grid = createEmptyGridBuilder(3);
+      placeUnits(grid, { x: 0, y: 0 }, 'a', 10);
+      placeUnits(grid, { x: 1, y: 0 }, 'b', 8);
+
+      const gameState = createGame(grid, [[], []], 2);
+      gameState.rounds[0].roundNumber = 15; // Max rounds
+      const result = resolveRound(gameState);
+
+      // Player 'a' wins by timeout
+      expect(result.winner).toBe('a');
+      expect(result.gameState.rounds.length).toBe(1);
+    });
   });
 });

@@ -57,21 +57,21 @@ describe('Edge Cases', () => {
       expect(result[0][0].units).toBe(21);
     });
 
-    it('should cap production at PRODUCTION_CAP', () => {
+    it('should not cap production result (only check threshold)', () => {
       const grid = createEmptyGridBuilder(3);
       placeUnits(grid, { x: 0, y: 0 }, 'a', 20);
 
       const result = applyProduction(grid, DEFAULT_CONFIG);
-      expect(result[0][0].units).toBe(21);
+      expect(result[0][0].units).toBe(21); // 20 + 1 = 21
     });
 
-    it('should respect production cap with resource squares', () => {
+    it('should allow production to exceed PRODUCTION_CAP with resource squares', () => {
       const grid = createEmptyGridBuilder(3);
       placeUnits(grid, { x: 0, y: 0 }, 'a', 20);
       grid[0][0].isResource = true;
 
       const result = applyProduction(grid, DEFAULT_CONFIG);
-      expect(result[0][0].units).toBe(21);
+      expect(result[0][0].units).toBe(22); // 20 + 2 = 22 (not capped at 21)
     });
   });
 
@@ -104,6 +104,21 @@ describe('Edge Cases', () => {
 
       const parsed = parseGrid(serializeGrid(grid));
       expect(parsed[0][0].units).toBe(99);
+    });
+
+    it('should handle 3-digit units (100-999) correctly', () => {
+      const grid = createEmptyGridBuilder(2);
+      placeUnits(grid, { x: 0, y: 0 }, 'a', 123);
+      placeUnits(grid, { x: 1, y: 0 }, 'b', 456);
+      placeUnits(grid, { x: 0, y: 1 }, 'c', 789);
+
+      const serialized = serializeGrid(grid);
+      expect(serialized).toBe('123a.|456b.\n789c.|000..');
+
+      const parsed = parseGrid(serialized);
+      expect(parsed[0][0].units).toBe(123);
+      expect(parsed[1][0].units).toBe(456);
+      expect(parsed[0][1].units).toBe(789);
     });
   });
 

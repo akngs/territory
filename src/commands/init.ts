@@ -96,7 +96,8 @@ export function performInitialSetup(
 
   // 5. Select resource squares (excluding player starting positions)
   const totalSquares = config.MAP_SIZE * config.MAP_SIZE;
-  const numResourceSquares = Math.round((totalSquares * config.RESOURCE_SQUARE_PCT) / 100);
+  // Use Math.ceil to ensure we meet the minimum target percentage
+  const numResourceSquares = Math.ceil((totalSquares * config.RESOURCE_SQUARE_PCT) / 100);
 
   // Get all coordinates except starting positions
   const availableCoords: Coordinate[] = [];

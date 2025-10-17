@@ -58,17 +58,6 @@ export function resolveRound(gameState: GameState): ResolveResult {
   // Check end conditions
   const winner = checkEndConditions(playerUnits, currentRound.roundNumber, config.MAX_ROUNDS);
 
-  // Create next round with resolved grid state
-  const nextRound: RoundRecord = {
-    roundNumber: currentRound.roundNumber + 1,
-    declarations: [],
-    commands: [],
-    gridState: serializeGrid(grid),
-  };
-
-  gameState.rounds.push(nextRound);
-  gameState.currentRound = nextRound.roundNumber;
-
   if (winner !== undefined) {
     // Game over (winner is a player ID string, array of player IDs, or null for draw)
     gameState.winner = winner;
@@ -79,6 +68,17 @@ export function resolveRound(gameState: GameState): ResolveResult {
       playerUnits,
     };
   }
+
+  // Game continues - create next round with resolved grid state
+  const nextRound: RoundRecord = {
+    roundNumber: currentRound.roundNumber + 1,
+    declarations: [],
+    commands: [],
+    gridState: serializeGrid(grid),
+  };
+
+  gameState.rounds.push(nextRound);
+  gameState.currentRound = nextRound.roundNumber;
 
   return { gameState };
 }
