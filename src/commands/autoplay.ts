@@ -220,6 +220,57 @@ function formatCommandsForDisplay(commands: Command[]): string {
 }
 
 /**
+ * Handle parsing error for a player
+ */
+function handlePlayerCommandError(
+  playerId: string,
+  playerNumber: number,
+  error: unknown,
+  throwOnError: boolean
+): Command[] {
+  if (throwOnError) {
+    throw error instanceof Error
+      ? error
+      : new Error(`Player ${playerId} (#${playerNumber}): ${String(error)}`);
+  }
+
+  const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+  console.warn(`Player ${playerId} error: ${errorMsg} - treating as no commands`);
+  return [];
+}
+
+/**
+ * Process single player command response
+ */
+function processPlayerCommandResponse(
+  response: string,
+  playerIndex: number,
+  playerId: string,
+  playerNumber: number,
+  grid: ReturnType<typeof parseGrid>,
+  mapSize: number,
+  maxCommands: number,
+  throwOnError: boolean
+): Command[] {
+  const result = parsePlayerCommands(response, playerIndex, playerId, grid, mapSize, maxCommands);
+
+  if (!result.success) {
+    if (throwOnError) {
+      throw new Error(`Player ${playerId} (#${playerNumber}): ${result.error}`);
+    }
+    console.warn(
+      `Player ${playerId} (#${playerNumber}): ${result.error} - treating as no commands`
+    );
+    return [];
+  }
+
+  if (!throwOnError) {
+    console.log(`Player ${playerId}: ${formatCommandsForDisplay(result.commands)}`);
+  }
+  return result.commands;
+}
+
+/**
  * Parse player commands from responses
  */
 export function parseAllPlayerCommands(
@@ -237,29 +288,20 @@ export function parseAllPlayerCommands(
     const playerNumber = i + 1;
 
     try {
-      const result = parsePlayerCommands(responses[i], i, playerId, grid, mapSize, maxCommands);
-
-      if (!result.success) {
-        if (throwOnError) {
-          throw new Error(`Player ${playerId} (#${playerNumber}): ${result.error}`);
-        }
-        console.warn(
-          `Player ${playerId} (#${playerNumber}): ${result.error} - treating as no commands`
-        );
-        allCommands.push([]);
-      } else {
-        allCommands.push(result.commands);
-        if (!throwOnError) {
-          console.log(`Player ${playerId}: ${formatCommandsForDisplay(result.commands)}`);
-        }
-      }
+      const commands = processPlayerCommandResponse(
+        responses[i],
+        i,
+        playerId,
+        playerNumber,
+        grid,
+        mapSize,
+        maxCommands,
+        throwOnError
+      );
+      allCommands.push(commands);
     } catch (err) {
-      if (throwOnError) {
-        throw err;
-      }
-      const errorMsg = err instanceof Error ? err.message : 'Unknown error';
-      console.warn(`Player ${playerId} error: ${errorMsg} - treating as no commands`);
-      allCommands.push([]);
+      const commands = handlePlayerCommandError(playerId, playerNumber, err, throwOnError);
+      allCommands.push(commands);
     }
   }
 
