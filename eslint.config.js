@@ -56,7 +56,7 @@ export default tseslint.config(
       'no-console': 'off', // CLI app needs console output
 
       // SonarJS - Cognitive Complexity
-      'sonarjs/cognitive-complexity': ['error', 15], // Max complexity of 15
+      'sonarjs/cognitive-complexity': ['error', 10], // Max complexity of 10
 
       // SonarJS - Other useful rules
       'sonarjs/no-duplicate-string': ['warn', { threshold: 3 }],

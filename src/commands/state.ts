@@ -221,6 +221,30 @@ function generateDeclarationInstructions(
 }
 
 /**
+ * Determine the win reason based on game state
+ */
+function determineWinReason(
+  winnerUnits: number,
+  totalUnits: number,
+  playerStats: Array<{ id: string; units: number }>,
+  currentRound: RoundRecord,
+  maxRounds: number
+): string {
+  const playersWithUnits = playerStats.filter((p) => p.units > 0).length;
+
+  if (playersWithUnits === 1 && winnerUnits > totalUnits / 2) {
+    return 'by domination (last player standing)';
+  }
+  if (winnerUnits > totalUnits / 2) {
+    return `by domination (${winnerUnits}/${totalUnits} units, >50%)`;
+  }
+  if (currentRound.roundNumber >= maxRounds) {
+    return `by timeout (most units after ${maxRounds} rounds)`;
+  }
+  return '';
+}
+
+/**
  * Generate game over message with winner and final standings
  */
 function generateGameOverMessage(
@@ -257,20 +281,13 @@ function generateGameOverMessage(
     lines.push(`   Final units: ${winnerUnits} each`);
   } else if (winner) {
     const winnerUnits = summary.playerUnits.get(winner) || 0;
-
-    // Determine win condition
-    let winReason = '';
-    const playersWithUnits = playerStats.filter((p) => p.units > 0).length;
-
-    if (playersWithUnits === 1 && winnerUnits > totalUnits / 2) {
-      // Only one player has units and they have >50%
-      winReason = 'by domination (last player standing)';
-    } else if (winnerUnits > totalUnits / 2) {
-      winReason = `by domination (${winnerUnits}/${totalUnits} units, >50%)`;
-    } else if (currentRound.roundNumber >= maxRounds) {
-      winReason = `by timeout (most units after ${maxRounds} rounds)`;
-    }
-
+    const winReason = determineWinReason(
+      winnerUnits,
+      totalUnits,
+      playerStats,
+      currentRound,
+      maxRounds
+    );
     lines.push(chalk.bold.yellow(`🏆 Winner: Player ${winner} ${winReason}`));
     lines.push(`   Final units: ${winnerUnits}`);
   } else {
